@@ -6,6 +6,7 @@ package
 	import net.flashpunk.utils.*;
 	
 	import flash.display.*;
+	import flash.geom.*;
 	
 	public class Level extends World
 	{
@@ -65,6 +66,18 @@ package
 						level.setPixel(x-1, y+3, 0xFFFFFF);
 						level.setPixel(x-2, y+2, 0xFFFFFF);
 						level.setPixel(x-1, y+1, 0xFFFFFF);
+					} else {
+						level.floodFill(x, y, SPECIAL);
+						
+						var rect: Rectangle = level.getColorBoundsRect(0xFFFFFFFF, SPECIAL);
+						
+						if (colour == 0xFFFF00) { // up-down spike
+							add(new MovingSpike(level, rect, 0, 1));
+						} else if (colour == 0x00FFFF) { // left-right spike
+							add(new MovingSpike(level, rect, 1, 0));
+						}
+						
+						level.floodFill(x, y, BLANK);
 					}
 				}
 			}
