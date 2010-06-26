@@ -79,6 +79,18 @@
 			if (FP._world.visible) FP._world.render();
 		}
 		
+		/**
+		 * Sets the game's stage properties. Override this to set them differently.
+		 */
+		public function setStageProperties():void
+		{
+			stage.frameRate = FP.frameRate;
+			stage.align = StageAlign.TOP_LEFT;
+			stage.quality = StageQuality.HIGH;
+			stage.scaleMode = StageScaleMode.NO_SCALE;
+			stage.displayState = StageDisplayState.NORMAL;
+		}
+		
 		/** @private Event handler for stage entry. */
 		private function onStage(e:Event = null):void
 		{
@@ -87,11 +99,7 @@
 			
 			// set stage properties
 			FP.stage = stage;
-			stage.frameRate = FP.frameRate;
-			stage.align = StageAlign.TOP_LEFT;
-			stage.quality = StageQuality.HIGH;
-			stage.scaleMode = StageScaleMode.NO_SCALE;
-			stage.displayState = StageDisplayState.NORMAL;
+			setStageProperties();
 			
 			// enable input
 			Input.enable();
@@ -224,7 +232,9 @@
 			}
 			FP._world = FP._goto;
 			FP._goto = null;
+			FP._world.updateLists(); // make newly added entities available in begin()
 			FP._world.begin();
+			FP._world.updateLists(); // make newly added entities available in first update()
 			FP.cleanup();
 		}
 		

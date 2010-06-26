@@ -129,6 +129,8 @@
 		 */
 		public static function choose(...objs):*
 		{
+			if (objs.length == 1 && objs[0] is Array) { objs = objs[0]; }
+			
 			return objs[int(objs.length * random)];
 		}
 		
@@ -183,6 +185,21 @@
 			return point;
 		}
 		
+		/**
+		 * Gets the difference of two angles, wrapped around to the range -180 to 180.
+		 * @param	a	First angle in degrees.
+		 * @param	b	Second angle in degrees.
+		 * @return	Difference in angles, wrapped around to the range -180 to 180.
+		 */
+		public static function angleDiff(a:Number, b:Number):Number
+		{
+			var diff:Number = b - a;
+
+			while (diff > 180) { diff -= 360; }
+			while (diff <= -180) { diff += 360; }
+
+			return diff;
+		}
 		/**
 		 * Find the distance between two points.
 		 * @param	x1		The first x-position.
@@ -281,6 +298,48 @@
 		}
 		
 		/**
+		 * Linear interpolation between two values.
+		 * @param	a	First value.
+		 * @param	b	Second value.
+		 * @param	t	Interpolation value.
+		 * return	When t=0 returns a; when t=1 returns b; when t=0.5 returns average of a and b.
+		 */
+		public static function lerp(a:Number, b:Number, t:Number):Number
+		{
+			return a + (b-a)*t;
+		}
+		
+		/**
+		 * Linear interpolation between two colors.
+		 * @param	fromColor	First color.
+		 * @param	toColor		Second color.
+		 * @param	t			Interpolation value. Clamped to the range 0 to 1.
+		 * return	Component-wise interpolated color.
+		 */
+		public static function colorLerp(fromColor:uint, toColor:uint, t:Number):uint
+		{
+			if (t < 0) { return fromColor; }
+			if (t > 1) { return toColor; }
+			
+			var a:uint = fromColor >> 24 & 0xFF;
+			var r:uint = fromColor >> 16 & 0xFF;
+			var g:uint = fromColor >> 8 & 0xFF;
+			var b:uint = fromColor & 0xFF;
+			
+			var rangeA: int = (toColor >> 24 & 0xFF) - a;
+			var rangeR: int = (toColor >> 16 & 0xFF) - r;
+			var rangeG: int = (toColor >> 8 & 0xFF) - g;
+			var rangeB: int = (toColor & 0xFF) - b;
+			
+			a += rangeA * t;
+			r += rangeR * t;
+			g += rangeG * t;
+			b += rangeB * t;
+			
+			return a << 24 | r << 16 | g << 8 | b;
+		}
+		
+		/**
 		 * Transfers a value from one scale to another scale. For example, scale(.5, 0, 1, 10, 20) == 15, and scale(3, 0, 5, 100, 0) == 40.
 		 * @param	value		The value on the first scale.
 		 * @param	min			The minimum range of the first scale.
@@ -352,6 +411,45 @@
 			_seed = (_seed * 16807) % 2147483647;
 			return (_seed / 2147483647) * amount;
 		}
+		
+		/**
+		 * Returns the next item after current in the list of options.
+		 * @param	current		The currently selected item (must be one of the options).
+		 * @param	options		An array of all the items to cycle through.
+		 * @param	loop		If true, will jump to the first item after the last item is reached.
+		 * @return	The next item in the list.
+		 */
+		public static function next(current:*, options:Array, loop:Boolean = true):*
+		{
+			if (loop) return options[(options.indexOf(current) + 1) % options.length];
+			return options[Math.max(options.indexOf(current) + 1, options.length - 1)];
+		}
+		
+		/**
+		 * Returns the item previous to the current in the list of options.
+		 * @param	current		The currently selected item (must be one of the options).
+		 * @param	options		An array of all the items to cycle through.
+		 * @param	loop		If true, will jump to the last item after the first is reached.
+		 * @return	The previous item in the list.
+		 */
+		public static function prev(current:*, options:Array, loop:Boolean = true):*
+		{
+			if (loop) return options[((options.indexOf(current) - 1) + options.length) % options.length];
+			return options[Math.max(options.indexOf(current) - 1, 0)];
+		}
+		
+		/**
+		 * Swaps the current item between a and b. Useful for quick state/string/value swapping.
+		 * @param	current		The currently selected item.
+		 * @param	a			Item a.
+		 * @param	b			Item b.
+		 * @return	Returns a if current is b, and b if current is a.
+		 */
+		public static function swap(current:*, a:*, b:*):*
+		{
+			return current == a ? b : a;
+		}
+		
 		/**
 		 * Creates a color value by combining the chosen RGB values.
 		 * @param	R		The red value of the color, from 0 to 255.

@@ -56,8 +56,10 @@
 			row %= _rows;
 			_tile.x = (index % _setColumns) * _tile.width;
 			_tile.y = uint(index / _setColumns) * _tile.height;
+			_point.x = column * _tile.width;
+			_point.y = row * _tile.height;
 			_map.setPixel(column, row, index);
-			draw(column * _tile.width, row * _tile.height, _set, _tile);
+			copyPixels(_set, _tile, _point, null, null, false);
 		}
 		
 		/**
@@ -71,7 +73,7 @@
 			row %= _rows;
 			_tile.x = column * _tile.width;
 			_tile.y = row * _tile.height;
-			fill(_tile, 0);
+			fill(_tile, 0, 0);
 		}
 		
 		/**
@@ -136,6 +138,61 @@
 				column = c;
 				row ++;
 			}
+		}
+		
+		/**
+		 * Loads the Tilemap data from a string.
+		 * @param	str			The string data, which is a set of tile values separated by the columnSep and rowSep strings.
+		 * @param	columnSep	The string that separates each tile value on a row, default is ",".
+		 * @param	rowSep		The string that separates each row of tiles, default is "\n".
+		 */
+		public function loadFromString(str:String, columnSep:String = ",", rowSep:String = "\n"):void
+		{
+			var row: Array = str.split(rowSep);
+			var rows: int = row.length;
+			
+			for (var y:int = 0; y < rows; y++)
+			{
+				if (row[y] == '') { continue; }
+				
+				var col: Array = row[y].split(columnSep);
+				var cols: int = col.length;
+				
+				for (var x:int = 0; x < cols; x++)
+				{
+					if (col[x] == '') { continue; }
+					
+					setTile(x, y, uint(col[x]));
+				}
+			}
+		}
+		
+		/**
+		 * Saves the Tilemap data to a string.
+		 * @param	columnSep	The string that separates each tile value on a row, default is ",".
+		 * @param	rowSep		The string that separates each row of tiles, default is "\n".
+		 */
+		public function saveToString(columnSep:String = ",", rowSep:String = "\n"): String
+		{
+			var s: String = '';
+			
+			for (var y:int = 0; y < _rows; y++)
+			{
+				for (var x:int = 0; x < _columns; x++)
+				{
+					s += getTile(x, y);
+					
+					if (x != _columns - 1) {
+						s += columnSep;
+					}
+				}
+				
+				if (y != _rows - 1) {
+					s += rowSep;
+				}
+			}
+			
+			return s;
 		}
 		
 		/**
