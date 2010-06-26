@@ -19,12 +19,12 @@ package
 		
 		public override function update (): void
 		{
-			visible = ! visible;
+			//visible = ! visible;
 		}
 		
 		public override function render (): void
 		{
-			FP.buffer.setPixel(x - FP.camera.x, y - FP.camera.y, 0xFF000000);
+			FP.buffer.setPixel(x - FP.camera.x, y - FP.camera.y, 0xFFFF0000);
 		}
 	}
 }

@@ -12,6 +12,10 @@ package
 		[Embed(source = 'level.png')]
 		public static var levelGfx: Class;
 		
+		public static const BLANK: uint = 0xCCCCCC;
+		public static const SOLID: uint = 0x333333;
+		public static const SPECIAL: uint = 0xff00c6;
+		
 		public var player: Player;
 		
 		public function Level()
@@ -36,11 +40,11 @@ package
 				for (var x: int = 0; x < level.width; x++) {
 					var colour: uint = 0x00FFFFFF & level.getPixel(x, y);
 					
-					level.setPixel(x, y, 0xFFFFFF);
+					level.setPixel(x, y, BLANK);
 					
 					if (colour == 0x0) {
 						grid.setCell(x, y, true);
-						level.setPixel(x, y, 0x0);
+						level.setPixel(x, y, SOLID);
 					}
 					else if (colour == 0x0000FF) {
 						player.x = player.spawnX = x - 2;
@@ -67,8 +71,8 @@ package
 			
 			add(player);
 			
-			FP.camera.x = player.x - 22;
-			FP.camera.y = player.y - 14;
+			//FP.camera.x = player.x - 22;
+			//FP.camera.y = player.y - 14;
 		}
 		
 	}

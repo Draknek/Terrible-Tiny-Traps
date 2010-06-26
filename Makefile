@@ -1,4 +1,4 @@
-OUTPUT := mindshrinker.swf
+OUTPUT := tinytraps.swf
 
 ifdef DEBUG
 DEBUG_FLAG := true

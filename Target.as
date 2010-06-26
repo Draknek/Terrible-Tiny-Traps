@@ -40,7 +40,7 @@ package
 				
 				_x += 2;
 				
-				FP.buffer.setPixel(x - FP.camera.x + _x, y - FP.camera.y + _y, 0xFF000000);
+				FP.buffer.setPixel(x - FP.camera.x + _x, y - FP.camera.y + _y, 0xFF00FF00);
 			}
 		}
 	}
