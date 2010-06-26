@@ -27,6 +27,8 @@ package
 		{
 			graphic = spritemap;
 			
+			type = "player";
+			
 			setHitbox(3, 4, 0, 0);
 			
 			Input.define("L", Key.LEFT, Key.A);

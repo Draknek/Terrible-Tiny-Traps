@@ -15,7 +15,7 @@ package
 		
 		public static const BLANK: uint = 0xCCCCCC;
 		public static const SOLID: uint = 0x333333;
-		public static const SPECIAL: uint = 0xff00c6;
+		public static const SPECIAL: uint = 0x654321;
 		
 		public var player: Player;
 		
@@ -43,15 +43,15 @@ package
 					
 					level.setPixel(x, y, BLANK);
 					
-					if (colour == 0x0) {
+					if (colour == 0xFFFFFF) {
+						continue;
+					} else if (colour == 0x0) {
 						grid.setCell(x, y, true);
 						level.setPixel(x, y, SOLID);
 					}
 					else if (colour == 0x0000FF) {
 						player.x = player.spawnX = x - 2;
 						player.y = player.spawnY = y - 3;
-						
-						
 					}
 					else if (colour == 0xFF0000) {
 						add(new Spike(x, y));
@@ -67,17 +67,22 @@ package
 						level.setPixel(x-2, y+2, 0xFFFFFF);
 						level.setPixel(x-1, y+1, 0xFFFFFF);
 					} else {
-						level.floodFill(x, y, SPECIAL);
+						level.setPixel(x, y, colour | 0xFF000000);
+						level.floodFill(x, y, SPECIAL | 0xFF000000);
 						
-						var rect: Rectangle = level.getColorBoundsRect(0xFFFFFFFF, SPECIAL);
+						var rect: Rectangle = level.getColorBoundsRect(0xFFFFFFFF, SPECIAL | 0xFF000000);
 						
 						if (colour == 0xFFFF00) { // up-down spike
 							add(new MovingSpike(level, rect, 0, 1));
 						} else if (colour == 0x00FFFF) { // left-right spike
 							add(new MovingSpike(level, rect, 1, 0));
+						} else if (colour == 0x00FF00) { // lift
+							add(new MovingPlatform(level, rect, 0, 1));
+						} else if (colour == 0xC000FF) { // lift
+							add(new MovingPlatform(level, rect, 1, 0));
 						}
 						
-						level.floodFill(x, y, BLANK);
+						level.floodFill(x, y, BLANK | 0xFF000000);
 					}
 				}
 			}
