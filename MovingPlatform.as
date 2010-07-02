@@ -50,19 +50,21 @@ package
 				dx *= -1;
 				dy *= -1;
 			} else {
-				var p: Entity = collide("player", x, y -1);
+				var p: Player = collide("player", x, y -1) as Player;
 				
-				if (p) {
+				x += dx;
+				y += dy;
+				
+				if (p && p.deathCount <= 0) {
 					var e2: Entity = p.collide("solid", p.x+dx, p.y+dy);
 					
-					if (!e2) {
+					if (e2) {
+						p.die();
+					} else {
 						p.x += dx;
 						p.y += dy;
 					}
 				}
-				
-				x += dx;
-				y += dy;
 			}
 		}
 	}

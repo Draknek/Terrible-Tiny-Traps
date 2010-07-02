@@ -37,6 +37,8 @@ package
 			
 			player = new Player();
 			
+			add(player);
+			
 			for (var y: int = 0; y < level.height; y++) {
 				for (var x: int = 0; x < level.width; x++) {
 					var colour: uint = 0x00FFFFFF & level.getPixel(x, y);
@@ -86,8 +88,6 @@ package
 					}
 				}
 			}
-			
-			add(player);
 			
 			//FP.camera.x = player.x - 22;
 			//FP.camera.y = player.y - 14;

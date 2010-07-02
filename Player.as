@@ -130,9 +130,13 @@ package
 			e = collide("spike", x, y);
 			
 			if (e) {
-				deathCount = 16;
+				die();
 			}
 		}
 		
+		public function die () : void
+		{
+			deathCount = 15;
+		}
 	}
 }
