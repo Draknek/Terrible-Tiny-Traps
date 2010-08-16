@@ -16,16 +16,35 @@ package
 			
 			type = "target";
 			
-			setHitbox(5, 5, 0, 0);
+			var grid: Grid = new Grid(5, 5, 1, 1);
 			
-			//var grid = mask = new Grid(5, 5, 1, 1);
+			mask = grid;
 			
-			
+			for (var i: int = 0; i < 8; i++) {
+				var _x: Number = (i < 2) ? i : 4 - i;
+				var _y: Number = (i <= 4) ? i : 8 - i;
+				
+				if (i == 7) { _x = -1; }
+				
+				_x += 2;
+				
+				grid.setCell(_x, _y, true);
+			}
 		}
 		
 		public override function update (): void
 		{
 			frame = (frame + 1) % 8;
+			
+			var p: Player = collide("player", x, y) as Player;
+			
+			if (p)
+			{
+				FP.world.remove(this);
+				
+				p.spawnX = p.x;
+				p.spawnY = p.y;
+			}
 		}
 		
 		public override function render (): void
@@ -40,7 +59,7 @@ package
 				
 				_x += 2;
 				
-				FP.buffer.setPixel(x - FP.camera.x + _x, y - FP.camera.y + _y, 0xFF00FF00);
+				FP.buffer.setPixel(x - FP.camera.x + _x, y - FP.camera.y + _y, Level.PLAYER);
 			}
 		}
 	}

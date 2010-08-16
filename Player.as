@@ -10,6 +10,9 @@ package
 		[Embed(source = 'player.png')]
 		public static var playerGfx: Class;
 		
+		[Embed(source = 'mask.png')]
+		public static var maskGfx: Class;
+		
 		public var spritemap: Spritemap = new Spritemap(playerGfx, 3, 4);
 		
 		public var dx: int = 1;
@@ -27,9 +30,15 @@ package
 		{
 			graphic = spritemap;
 			
+			spritemap.color = Level.PLAYER;
+			
+			spritemap.frame = 5;
+			
 			type = "player";
 			
-			setHitbox(3, 4, 0, 0);
+			//setHitbox(3, 4, 0, 0);
+			
+			mask = new Pixelmask(maskGfx); // TODO: consider effects this has on moving platforms
 			
 			Input.define("L", Key.LEFT, Key.A);
 			Input.define("R", Key.RIGHT, Key.D);
@@ -43,7 +52,7 @@ package
 				
 				jumpCount = 0;
 				
-				visible = ((deathCount % 8) < 4);
+				//visible = ((deathCount % 8) < 4);
 				
 				deathCount--;
 				
@@ -73,20 +82,7 @@ package
 			
 			if (e) { canJump = true; }
 			
-			e = collide("solid", x + dx, y)
-			
-			if (e) {
-				e = collide("solid", x + dx, y - 1);
-				
-				if (canJump && ! e) {
-					x += dx;
-					y -= 1;
-				} else {
-					//dx *= -1;
-				}
-			} else {
-				x += dx;
-			}
+			moveX(dx);
 			
 			e = collide("solid", x, y + 1);
 			
@@ -132,6 +128,46 @@ package
 			if (e) {
 				die();
 			}
+		}
+		
+		public function moveX (dx: int): void
+		{
+			var e: Entity;
+			
+			e = collide("solid", x + dx, y)
+			
+			if (e) {
+				e = collide("solid", x + dx, y - 1);
+				
+				if (/*canJump &&*/ ! e) {
+					x += dx;
+					y -= 1;
+				} else {
+					//dx *= -1;
+				}
+			} else {
+				x += dx;
+			}
+		}
+		
+		public override function render (): void
+		{
+			if (deathCount > 0) {
+				var s: int = 15 - deathCount;
+				
+				if (deathCount <= 8) s = deathCount;
+				
+				Draw.linePlus(x + 1 - s, y + 2, x + 1 + s, y + 2, Level.PLAYER, 1.0 - s/8.0);
+				Draw.linePlus(x + 1, y + 2 - s, x + 1, y + 2 + s, Level.PLAYER, 1.0 - s/8.0);
+				
+				return;
+			}
+			
+			/*if (deathCount > 0 && (deathCount % 4) < 2) {
+				return;
+			}*/
+			
+			super.render();
 		}
 		
 		public function die () : void

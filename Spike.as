@@ -24,7 +24,7 @@ package
 		
 		public override function render (): void
 		{
-			FP.buffer.setPixel(x - FP.camera.x, y - FP.camera.y, 0xFFFF0000);
+			FP.buffer.setPixel(x - FP.camera.x, y - FP.camera.y, Level.SPIKE);
 		}
 	}
 }

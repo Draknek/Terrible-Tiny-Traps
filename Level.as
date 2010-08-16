@@ -6,6 +6,7 @@ package
 	import net.flashpunk.utils.*;
 	
 	import flash.display.*;
+	import flash.events.*;
 	import flash.geom.*;
 	
 	public class Level extends World
@@ -13,8 +14,10 @@ package
 		[Embed(source = 'level.png')]
 		public static var levelGfx: Class;
 		
-		public static const BLANK: uint = 0xCCCCCC;
+		public static const BLANK: uint = 0xFFFFFF;
 		public static const SOLID: uint = 0x333333;
+		public static const SPIKE: uint = 0xFF9494FF;
+		public static const PLAYER: uint = 0xFFFF8B60;
 		public static const SPECIAL: uint = 0x654321;
 		
 		public var player: Player;
@@ -39,6 +42,8 @@ package
 			
 			add(player);
 			
+			var checkpointGrid: Grid = new Grid(level.width, level.height, 1, 1);
+			
 			for (var y: int = 0; y < level.height; y++) {
 				for (var x: int = 0; x < level.width; x++) {
 					var colour: uint = 0x00FFFFFF & level.getPixel(x, y);
@@ -47,9 +52,14 @@ package
 					
 					if (colour == 0xFFFFFF) {
 						continue;
+					} else if (colour == 0xCEE3F8) {
+						level.setPixel(x, y, 0xCEE3F8);
 					} else if (colour == 0x0) {
 						grid.setCell(x, y, true);
 						level.setPixel(x, y, SOLID);
+					}
+					else if (colour == 0xCCCCCC) {
+						checkpointGrid.setCell(x, y, true);
 					}
 					else if (colour == 0x0000FF) {
 						player.x = player.spawnX = x - 2;
@@ -89,8 +99,57 @@ package
 				}
 			}
 			
-			//FP.camera.x = player.x - 22;
-			//FP.camera.y = player.y - 14;
+			add(new Checkpoint(checkpointGrid));
+		}
+		
+		public override function update (): void
+		{
+			if (! focused) { return; }
+			
+			super.update();
+		}
+		
+		public override function render (): void
+		{
+			super.render();
+			
+			if (! focused) {
+				Draw.rect(0, 28, 150, 125, 0xFFFFFF, 0.8);
+			}
+			
+			Main.clickText.visible = ! focused;
+		}
+		
+		public var focused: Boolean = false;
+		
+		public override function begin (): void
+		{
+			FP.stage.addEventListener(MouseEvent.MOUSE_DOWN, mouseClick);
+		}
+		
+		public override function end (): void
+		{
+			FP.stage.removeEventListener(Event.ACTIVATE, focusGain);
+			FP.stage.removeEventListener(Event.DEACTIVATE, focusLost);
+		}
+		
+		private function mouseClick(e:Event):void
+		{
+			FP.stage.addEventListener(Event.ACTIVATE, focusGain);
+			FP.stage.addEventListener(Event.DEACTIVATE, focusLost);
+			FP.stage.removeEventListener(MouseEvent.MOUSE_DOWN, mouseClick);
+			focusGain();
+		}
+		
+		private function focusGain(e:Event = null):void
+		{
+			focused = true;
+			
+		}
+		
+		private function focusLost(e:Event = null):void
+		{
+			focused = false;
 		}
 		
 	}

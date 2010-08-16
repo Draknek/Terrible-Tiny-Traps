@@ -31,7 +31,7 @@ package
 					
 					if ((pixel & 0xFFFFFF) == Level.SPECIAL) {
 						//grid.setCell(ix, iy, true);
-						bitmap.setPixel32(ix, iy, 0xFFFF0000);
+						bitmap.setPixel32(ix, iy, Level.SPIKE);
 					}
 				}
 			}
