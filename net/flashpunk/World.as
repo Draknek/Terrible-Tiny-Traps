@@ -16,6 +16,11 @@
 		public var visible:Boolean = true;
 		
 		/**
+		 * Point used to determine drawing offset in the render loop.
+		 */
+		public var camera:Point = new Point;
+		
+		/**
 		 * Constructor.
 		 */
 		public function World() 
@@ -55,6 +60,7 @@
 					if (e._tween) e.updateTweens();
 					e.update();
 				}
+				if (e._graphic && e._graphic.active) e._graphic.update();
 				e = e._updateNext;
 			}
 		}
@@ -134,59 +140,68 @@
 				e._world = null;
 				e = e._updateNext;
 			}
-			FP.cleanup();
 		}
 		
 		/**
 		 * Adds multiple Entities to the world.
-		 * @param	...list		The Entities you want to add, or arrays of Entities.
+		 * @param	...list		Several Entities (as arguments) or an Array/Vector of Entities.
 		 */
 		public function addList(...list):void
 		{
-			if (!list) return;
-			var i:uint = 0, n:uint = list.length,
-				j:uint, m:uint, a:Array;
-			while (i < n)
+			var e:Entity;
+			if (list[0] is Array || list[0] is Vector.<*>)
 			{
-				if (list[i] is Entity)
-				{
-					add(list[i ++] as Entity);
-					continue;
-					
-				}
-				if ((a = list[i ++] as Array))
-				{
-					j = 0;
-					m = a.length;
-					while (j < m) addList(a[j ++]);
-				}
+				for each (e in list[0]) add(e);
+				return;
 			}
+			for each (e in list) add(e);
 		}
 		
 		/**
 		 * Removes multiple Entities from the world.
-		 * @param	...list		The Entities you want to remove, or arrays of Entities.
+		 * @param	...list		Several Entities (as arguments) or an Array/Vector of Entities.
 		 */
 		public function removeList(...list):void
 		{
-			if (!list) return;
-			var i:uint = 0, n:uint = list.length,
-				j:uint, m:uint, a:Array;
-			while (i < n)
+			var e:Entity;
+			if (list[0] is Array || list[0] is Vector.<*>)
 			{
-				if (list[i] is Entity)
-				{
-					remove(list[i ++] as Entity);
-					continue;
-					
-				}
-				if ((a = list[i ++] as Array))
-				{
-					j = 0;
-					m = a.length;
-					while (j < m) removeList(a[j ++]);
-				}
+				for each (e in list[0]) remove(e);
+				return;
 			}
+			for each (e in list) remove(e);
+		}
+		
+		/**
+		 * Adds an Entity to the World with the Graphic object.
+		 * @param	graphic		Graphic to assign the Entity.
+		 * @param	x			X position of the Entity.
+		 * @param	y			Y position of the Entity.
+		 * @param	layer		Layer of the Entity.
+		 * @return	The Entity that was added.
+		 */
+		public function addGraphic(graphic:Graphic, layer:int = 0, x:int = 0, y:int = 0):Entity
+		{
+			var e:Entity = new Entity(x, y, graphic);
+			if (layer != 0) e.layer = layer;
+			e.active = false;
+			return add(e);
+		}
+		
+		/**
+		 * Adds an Entity to the World with the Mask object.
+		 * @param	mask	Mask to assign the Entity.
+		 * @param	type	Collision type of the Entity.
+		 * @param	x		X position of the Entity.
+		 * @param	y		Y position of the Entity.
+		 * @return	The Entity that was added.
+		 */
+		public function addMask(mask:Mask, type:String, x:int = 0, y:int = 0):Entity
+		{
+			var e:Entity = new Entity(x, y, null, mask);
+			if (type) e.type = type;
+			e.active = e.visible = false;
+			return add(e);
 		}
 		
 		/**
@@ -237,7 +252,6 @@
 				e = n;
 			}
 			delete _recycled[classType];
-			FP.cleanup();
 		}
 		
 		/**
@@ -246,7 +260,6 @@
 		public static function clearRecycledAll():void
 		{
 			for (var classType:Object in _recycled) clearRecycled(classType as Class);
-			FP.cleanup();
 		}
 		
 		/**
@@ -390,6 +403,136 @@
 		}
 		
 		/**
+		 * Returns the first Entity found that collides with the line.
+		 * @param	type		The Entity type to check for.
+		 * @param	fromX		Start x of the line.
+		 * @param	fromY		Start y of the line.
+		 * @param	toX			End x of the line.
+		 * @param	toY			End y of the line.
+		 * @param	precision		
+		 * @param	p
+		 * @return
+		 */
+		public function collideLine(type:String, fromX:int, fromY:int, toX:int, toY:int, precision:uint = 1, p:Point = null):Entity
+		{
+			// If the distance is less than precision, do the short sweep.
+			if (precision < 1) precision = 1;
+			if (FP.distance(fromX, fromY, toX, toY) < precision)
+			{
+				if (p)
+				{
+					if (fromX == toX && fromY == toY)
+					{
+						p.x = toX; p.y = toY;
+						return collidePoint(type, toX, toY);
+					}
+					return collideLine(type, fromX, fromY, toX, toY, 1, p);
+				}
+				else return collidePoint(type, fromX, toY);
+			}
+			
+			// Get information about the line we're about to raycast.
+			var xDelta:int = Math.abs(toX - fromX),
+				yDelta:int = Math.abs(toY - fromY),
+				xSign:Number = toX > fromX ? precision : -precision,
+				ySign:Number = toY > fromY ? precision : -precision,
+				x:Number = fromX, y:Number = fromY, e:Entity;
+			
+			// Do a raycast from the start to the end point.
+			if (xDelta > yDelta)
+			{
+				ySign *= yDelta / xDelta;
+				if (xSign > 0)
+				{
+					while (x < toX)
+					{
+						if ((e = collidePoint(type, x, y)))
+						{
+							if (!p) return e;
+							if (precision < 2)
+							{
+								p.x = x - xSign; p.y = y - ySign;
+								return e;
+							}
+							return collideLine(type, x - xSign, y - ySign, toX, toY, 1, p);
+						}
+						x += xSign; y += ySign;
+					}
+				}
+				else
+				{
+					while (x > toX)
+					{
+						if ((e = collidePoint(type, x, y)))
+						{
+							if (!p) return e;
+							if (precision < 2)
+							{
+								p.x = x - xSign; p.y = y - ySign;
+								return e;
+							}
+							return collideLine(type, x - xSign, y - ySign, toX, toY, 1, p);
+						}
+						x += xSign; y += ySign;
+					}
+				}
+			}
+			else
+			{
+				xSign *= xDelta / yDelta;
+				if (ySign > 0)
+				{
+					while (y < toY)
+					{
+						if ((e = collidePoint(type, x, y)))
+						{
+							if (!p) return e;
+							if (precision < 2)
+							{
+								p.x = x - xSign; p.y = y - ySign;
+								return e;
+							}
+							return collideLine(type, x - xSign, y - ySign, toX, toY, 1, p);
+						}
+						x += xSign; y += ySign;
+					}
+				}
+				else
+				{
+					while (y > toY)
+					{
+						if ((e = collidePoint(type, x, y)))
+						{
+							if (!p) return e;
+							if (precision < 2)
+							{
+								p.x = x - xSign; p.y = y - ySign;
+								return e;
+							}
+							return collideLine(type, x - xSign, y - ySign, toX, toY, 1, p);
+						}
+						x += xSign; y += ySign;
+					}
+				}
+			}
+			
+			// Check the last position.
+			if (precision > 1)
+			{
+				if (!p) return collidePoint(type, toX, toY);
+				if (collidePoint(type, toX, toY)) return collideLine(type, x - xSign, y - ySign, toX, toY, 1, p);
+			}
+			
+			// No collision, return the end point.
+			if (p)
+			{
+				p.x = toX;
+				p.y = toY;
+			}
+			return null;
+		}
+		
+		/**
 		 * Populates an array with all Entities that collide with the rectangle. This
 		 * function does not empty the array, that responsibility is left to the user.
 		 * @param	type		The Entity type to check for.
@@ -397,19 +540,20 @@
 		 * @param	rY			Y position of the rectangle.
 		 * @param	rWidth		Width of the rectangle.
 		 * @param	rHeight		Height of the rectangle.
-		 * @param	array		The Array to populate with collided Entities.
-		 * @return	The provided Array.
+		 * @param	into		The Array or Vector to populate with collided Entities.
 		 */
-		public function collideRectInto(type:String, rX:Number, rY:Number, rWidth:Number, rHeight:Number, array:Array):Array
+		public function collideRectInto(type:String, rX:Number, rY:Number, rWidth:Number, rHeight:Number, into:Object):void
 		{
-			var e:Entity = _typeFirst[type],
-				n:uint = array.length;
-			while (e)
+			if (into is Array || into is Vector.<*>)
 			{
-				if (e.collideRect(e.x, e.y, rX, rY, rWidth, rHeight)) array[n ++] = e;
-				e = e._typeNext;
+				var e:Entity = _typeFirst[type],
+					n:uint = into.length;
+				while (e)
+				{
+					if (e.collideRect(e.x, e.y, rX, rY, rWidth, rHeight)) into[n ++] = e;
+					e = e._typeNext;
+				}
 			}
-			return array;
 		}
 		
 		/**
@@ -418,19 +562,21 @@
 		 * @param	type		The Entity type to check for.
 		 * @param	pX			X position.
 		 * @param	pY			Y position.
-		 * @param	array		The Array to populate with collided Entities.
+		 * @param	into		The Array or Vector to populate with collided Entities.
 		 * @return	The provided Array.
 		 */
-		public function collidePointInto(type:String, pX:Number, pY:Number, array:Array):Array
+		public function collidePointInto(type:String, pX:Number, pY:Number, into:Object):void
 		{
-			var e:Entity = _typeFirst[type],
-				n:uint = array.length;
-			while (e)
+			if (into is Array || into is Vector.<*>)
 			{
-				if (e.collidePoint(e.x, e.y, pX, pY)) array[n ++] = e;
-				e = e._typeNext;
+				var e:Entity = _typeFirst[type],
+					n:uint = into.length;
+				while (e)
+				{
+					if (e.collidePoint(e.x, e.y, pX, pY)) into[n ++] = e;
+					e = e._typeNext;
+				}
 			}
-			return array;
 		}
 		
 		/**
@@ -535,7 +681,7 @@
 		
 		/**
 		 * Returns the amount of Entities of the type are in the World.
-		 * @param	type		The type to count.
+		 * @param	type		The type (or Class type) to count.
 		 * @return	How many Entities of type exist in the World.
 		 */
 		public function typeCount(type:String):uint
@@ -567,6 +713,11 @@
 		 * The first Entity in the World.
 		 */
 		public function get first():Entity { return _updateFirst; }
+		
+		/**
+		 * How many Entity layers the World has.
+		 */
+		public function get layers():uint { return _layerList.length; }
 		
 		/**
 		 * The first Entity of the type.
@@ -660,83 +811,93 @@
 		public function get uniqueTypes():uint
 		{
 			var i:uint = 0;
-			for (var type:String in _typeCount) i += 1;
+			for (var type:String in _typeCount) i ++;
 			return i;
 		}
 		
 		/**
-		 * Pushes all Entities in the World of the type into the array.
+		 * Pushes all Entities in the World of the type into the Array or Vector.
 		 * @param	type		The type to check.
-		 * @param	into		The array to populate.
+		 * @param	into		The Array or Vector to populate.
 		 * @return	The same array, populated.
 		 */
-		public function getType(type:String, into:Array):Array
+		public function getType(type:String, into:Object):void
 		{
-			var e:Entity = _typeFirst[type],
-				n:uint = into.length;
-			while (e)
+			if (into is Array || into is Vector.<*>)
 			{
-				into[n ++] = e;
-				e = e._typeNext;
+				var e:Entity = _typeFirst[type],
+					n:uint = into.length;
+				while (e)
+				{
+					into[n ++] = e;
+					e = e._typeNext;
+				}
 			}
-			return into;
 		}
 		
 		/**
-		 * Pushes all Entities in the World of the Class into the array.
+		 * Pushes all Entities in the World of the Class into the Array or Vector.
 		 * @param	c			The Class type to check.
-		 * @param	into		The array to populate.
+		 * @param	into		The Array or Vector to populate.
 		 * @return	The same array, populated.
 		 */
-		public function getClass(c:Class, into:Array):Array
+		public function getClass(c:Class, into:Object):void
 		{
-			var e:Entity = _updateFirst,
-				n:uint = into.length;
-			while (e)
+			if (into is Array || into is Vector.<*>)
 			{
-				if (e is c) into[n ++] = e;
-				e = e._updateNext;
+				var e:Entity = _updateFirst,
+					n:uint = into.length;
+				while (e)
+				{
+					if (e is c) into[n ++] = e;
+					e = e._updateNext;
+				}
 			}
-			return into;
 		}
 		
 		/**
-		 * Pushes all Entities in the World on the layer into the array.
+		 * Pushes all Entities in the World on the layer into the Array or Vector.
 		 * @param	layer		The layer to check.
-		 * @param	into		The array to populate.
+		 * @param	into		The Array or Vector to populate.
 		 * @return	The same array, populated.
 		 */
-		public function getLayer(layer:int, into:Array):Array
+		public function getLayer(layer:int, into:Object):void
 		{
-			var e:Entity = _renderLast[layer],
-				n:uint = into.length;
-			while (e)
+			if (into is Array || into is Vector.<*>)
 			{
-				into[n ++] = e;
-				e = e._updatePrev;
+				var e:Entity = _renderLast[layer],
+					n:uint = into.length;
+				while (e)
+				{
+					into[n ++] = e;
+					e = e._updatePrev;
+				}
 			}
-			return into;
 		}
 		
 		/**
 		 * Pushes all Entities in the World into the array.
-		 * @param	into		The array to populate.
+		 * @param	into		The Array or Vector to populate.
 		 * @return	The same array, populated.
 		 */
-		public function getAll(into:Array):Array
+		public function getAll(into:Object):void
 		{
-			var e:Entity = _updateFirst,
-				n:uint = into.length;
-			while (e)
+			if (into is Array || into is Vector.<*>)
 			{
-				into[n ++] = e;
-				e = e._updateNext;
+				var e:Entity = _updateFirst,
+					n:uint = into.length;
+				while (e)
+				{
+					into[n ++] = e;
+					e = e._updateNext;
+				}
 			}
-			return into;
 		}
 		
-		/** @private Updates the add/remove lists at the end of the frame. */
-		internal function updateLists():void
+		/**
+		 * Updates the add/remove lists at the end of the frame.
+		 */
+		public function updateLists():void
 		{
 			var e:Entity;
 			
@@ -772,8 +933,7 @@
 			// sort the depth list
 			if (_layerSort)
 			{
-				if (_layerList.indexOf(null) >= 0) removeNulls(_layerList);
-				if (_layerList.length > 1) sort(_layerList, 0, _layerList.length - 1);
+				if (_layerList.length > 1) FP.sort(_layerList, true);
 				_layerSort = false;
 			}
 		}
@@ -814,12 +974,14 @@
 			var f:Entity = _renderFirst[e._layer];
 			if (f)
 			{
+				// Append entity to existing layer.
 				e._renderNext = f;
 				f._renderPrev = e;
 				_layerCount[e._layer] ++;
 			}
 			else
 			{
+				// Create new layer with entity.
 				_renderLast[e._layer] = e;
 				_layerList[_layerList.length] = e._layer;
 				_layerSort = true;
@@ -838,11 +1000,17 @@
 			if (e._renderPrev) e._renderPrev._renderNext = e._renderNext;
 			else
 			{
+				// Remove this entity from the layer.
 				_renderFirst[e._layer] = e._renderNext
 				if (!e._renderNext)
 				{
-					_layerList[_layerList.indexOf(e._layer)] = null;
-					_layerSort = true;
+					// Remove the layer from the layer list if this was the last entity.
+					if (_layerList.length > 1)
+					{
+						_layerList[_layerList.indexOf(e._layer)] = _layerList[_layerList.length - 1];
+						_layerSort = true;
+					}
+					_layerList.length --;
 				}
 			}
 			_layerCount[e._layer] --;
@@ -877,46 +1045,6 @@
 			if (e._typePrev) e._typePrev._typeNext = e._typeNext;
 			e._typeNext = e._typePrev = null;
 			_typeCount[e._type] --;
-		}
-		
-		/** @private Removes all nulls from the array. */
-		private static function removeNulls(a:Array):void
-		{
-			var i:int = 0,
-				j:int = a.length;
-			while (i < j)
-			{
-				while (a[i] != null) i ++;
-				while (a[j] == null) j --;
-				a[i] = a[j];
-				a[j] = null;
-			}
-			a[j] = a[i];
-			a[i] = null;
-			a.length -= a.length - a.indexOf(null);
-		}
-		
-		/** @private Quicksorts the values in the array. */
-		private static function sort(a:Array, left:int, right:int):void
-		{
-			var i:int = left,
-				j:int = right,
-				p:int = a[Math.round((left + right) * .5)],
-				t:int;
-			while (i <= j)
-			{
-				while (a[i] < p) i ++;
-				while (a[j] > p) j --;
-				if (i <= j)
-				{
-					t = a[i];
-					a[i ++] = a[j];
-					a[j --] = t;
-				}
-			}
-			if (left < j) sort(a, left, j);
-			if (i < right) sort(a, i, right);
-			return;
 		}
 		
 		/** @private Calculates the squared distance between two rectangles. */
@@ -971,32 +1099,6 @@
 			return squarePoints(px, py, rx, ry);
 		}
 		
-		/** @private Inherits all persistent Entities from the world. */
-		internal function inherit(from:World, inheritAll:Boolean = false):void
-		{
-			var e:Entity = from._updateFirst,
-				a:Array = [],
-				n:uint = 0;
-			if (inheritAll)
-			{
-				while (e)
-				{
-					a[n ++] = from.remove(e);
-					e = e._updateNext;
-				}
-			}
-			else
-			{
-				while (e)
-				{
-					if (e.persist) a[n ++] = from.remove(e);
-					e = e._updateNext;
-				}
-			}
-			from.updateLists();
-			addList(a);
-		}
-		
 		// Adding and removal.
 		/** @private */	private var _add:Vector.<Entity> = new Vector.<Entity>;
 		/** @private */	private var _remove:Vector.<Entity> = new Vector.<Entity>;
@@ -1011,12 +1113,11 @@
 		private var _layerList:Array = [];
 		private var _layerCount:Array = [];
 		private var _layerSort:Boolean;
+		private var _tempArray:Array = [];
 		
 		/** @private */	private var _classCount:Dictionary = new Dictionary;
 		/** @private */	internal var _typeFirst:Object = { };
 		/** @private */	private var _typeCount:Object = { };
 		/** @private */	private static var _recycled:Dictionary = new Dictionary;
-		/** @private */	internal var _inherit:Boolean = false;
-		/** @private */	internal var _inheritAll:Boolean = false;
 	}
 }

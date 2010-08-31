@@ -9,7 +9,11 @@
 	import flash.media.SoundMixer;
 	import flash.media.SoundTransform;
 	import flash.system.System;
+	import flash.utils.ByteArray;
+	import flash.utils.getTimer;
 	import net.flashpunk.*;
+	import net.flashpunk.debug.Console;
+	import net.flashpunk.tweens.misc.MultiVarTween;
 	
 	/**
 	 * Static catch-all class used to access global properties and functions.
@@ -19,7 +23,7 @@
 		/**
 		 * The FlashPunk major version.
 		 */
-		public static const VERSION:String = "1.0";
+		public static const VERSION:String = "1.4";
 		
 		/**
 		 * Width of the game.
@@ -40,6 +44,11 @@
 		 * The framerate assigned to the stage.
 		 */
 		public static var frameRate:Number;
+		
+		/**
+		 * The framerate assigned to the stage.
+		 */
+		public static var assignedFrameRate:Number;
 		
 		/**
 		 * Time elapsed since the last frame (non-fixed framerate only).
@@ -82,19 +91,12 @@
 			_goto = value;
 		}
 		
-		// switches world, optionally inheriting entities
 		/**
-		 * Switches the current World at the end of the frame. Call this only if
-		 * you want to use Entity persistence, otherwise just assign FP.world.
-		 * @param	to				The World to switch to.
-		 * @param	inheritAll		If all Entities (not just persistent ones) should be inherited.
+		 * Resets the camera position.
 		 */
-		public static function switchWorld(to:World, inheritAll:Boolean = false):void
+		public static function resetCamera():void
 		{
-			if (_world == to) return;
-			to._inherit = true;
-			to._inheritAll = inheritAll;
-			_goto = to;
+			camera.x = camera.y = 0;
 		}
 		
 		/**
@@ -129,9 +131,8 @@
 		 */
 		public static function choose(...objs):*
 		{
-			if (objs.length == 1 && objs[0] is Array) { objs = objs[0]; }
-			
-			return objs[int(objs.length * random)];
+			var c:* = (objs.length == 1 && (objs[0] is Array || objs[0] is Vector.<*>)) ? objs[0] : objs;
+			return c[rand(c.length)];
 		}
 		
 		/**
@@ -157,6 +158,66 @@
 		}
 		
 		/**
+		 * Linear interpolation between two values.
+		 * @param	a		First value.
+		 * @param	b		Second value.
+		 * @param	t		Interpolation factor.
+		 * @return	When t=0, returns a. When t=1, returns b. When t=0.5, will return halfway between a and b. Etc.
+		 */
+		public static function lerp(a:Number, b:Number, t:Number = 1):Number
+		{
+			return a + (b - a) * t;
+		}
+		
+		/**
+		 * Linear interpolation between two colors.
+		 * @param	fromColor		First color.
+		 * @param	toColor			Second color.
+		 * @param	t				Interpolation value. Clamped to the range [0, 1].
+		 * return	RGB component-interpolated color value.
+		 */
+		public static function colorLerp(fromColor:uint, toColor:uint, t:Number = 1):uint
+		{
+			if (t <= 0) { return fromColor; }
+			if (t >= 1) { return toColor; }
+			var a:uint = fromColor >> 24 & 0xFF,
+				r:uint = fromColor >> 16 & 0xFF,
+				g:uint = fromColor >> 8 & 0xFF,
+				b:uint = fromColor & 0xFF,
+				dA: int = (toColor >> 24 & 0xFF) - a,
+				dR: int = (toColor >> 16 & 0xFF) - r,
+				dG: int = (toColor >> 8 & 0xFF) - g,
+				dB: int = (toColor & 0xFF) - b;
+			a += dA * t;
+			r += dR * t;
+			g += dG * t;
+			b += dB * t;
+			return a << 24 | r << 16 | g << 8 | b;
+		}
+		
+		/**
+		 * Steps the object towards a point.
+		 * @param	object		Object to move (must have an x and y property).
+		 * @param	x			X position to step towards.
+		 * @param	y			Y position to step towards.
+		 * @param	distance	The distance to step (will not overshoot target).
+		 */
+		public static function stepTowards(object:Object, x:Number, y:Number, distance:Number = 1):void
+		{
+			point.x = x - object.x;
+			point.y = y - object.y;
+			if (point.length <= distance)
+			{
+				object.x = x;
+				object.y = y;
+				return;
+			}
+			point.normalize(distance);
+			object.x += point.x;
+			object.y += point.y;
+		}
+		
+		/**
 		 * Finds the angle (in degrees) from point 1 to point 2.
 		 * @param	x1		The first x-position.
 		 * @param	y1		The first y-position.
@@ -171,18 +232,16 @@
 		}
 		
 		/**
-		 * Sets the x/y values of the provided point to a vector of the specified angle and length.
-		 * @param	point		The point object to return.
+		 * Sets the x/y values of the provided object to a vector of the specified angle and length.
+		 * @param	object		The object whose x/y properties should be set.
 		 * @param	angle		The angle of the vector, in degrees.
 		 * @param	length		The distance to the vector from (0, 0).
-		 * @return	The point object with x/y set to the length and angle from (0, 0).
 		 */
-		public static function angleXY(point:Point, angle:Number, length:Number = 1):Point
+		public static function angleXY(object:Object, angle:Number, length:Number = 1):void
 		{
 			angle *= RAD;
-			point.x = Math.cos(angle) * length;
-			point.y = Math.sin(angle) * length;
-			return point;
+			object.x = Math.cos(angle) * length;
+			object.y = Math.sin(angle) * length;
 		}
 		
 		/**
@@ -295,48 +354,6 @@
 			}
 			value = value < min ? value : min;
 			return value > max ? value : max;
-		}
-		
-		/**
-		 * Linear interpolation between two values.
-		 * @param	a	First value.
-		 * @param	b	Second value.
-		 * @param	t	Interpolation value.
-		 * return	When t=0 returns a; when t=1 returns b; when t=0.5 returns average of a and b.
-		 */
-		public static function lerp(a:Number, b:Number, t:Number):Number
-		{
-			return a + (b-a)*t;
-		}
-		
-		/**
-		 * Linear interpolation between two colors.
-		 * @param	fromColor	First color.
-		 * @param	toColor		Second color.
-		 * @param	t			Interpolation value. Clamped to the range 0 to 1.
-		 * return	Component-wise interpolated color.
-		 */
-		public static function colorLerp(fromColor:uint, toColor:uint, t:Number):uint
-		{
-			if (t < 0) { return fromColor; }
-			if (t > 1) { return toColor; }
-			
-			var a:uint = fromColor >> 24 & 0xFF;
-			var r:uint = fromColor >> 16 & 0xFF;
-			var g:uint = fromColor >> 8 & 0xFF;
-			var b:uint = fromColor & 0xFF;
-			
-			var rangeA: int = (toColor >> 24 & 0xFF) - a;
-			var rangeR: int = (toColor >> 16 & 0xFF) - r;
-			var rangeG: int = (toColor >> 8 & 0xFF) - g;
-			var rangeB: int = (toColor & 0xFF) - b;
-			
-			a += rangeA * t;
-			r += rangeR * t;
-			g += rangeG * t;
-			b += rangeB * t;
-			
-			return a << 24 | r << 16 | g << 8 | b;
 		}
 		
 		/**
@@ -463,6 +480,34 @@
 		}
 		
 		/**
+		 * Creates a color value with the chosen HSV values.
+		 * @param	h		The hue of the color (from 0 to 1).
+		 * @param	s		The saturation of the color (from 0 to 1).
+		 * @param	v		The value of the color (from 0 to 1).
+		 * @return	The color uint.
+		 */
+		public static function getColorHSV(h:Number, s:Number, v:Number):uint
+		{
+			h = int(h * 360);
+			var hi:int = Math.floor(h / 60) % 6,
+				f:Number = h / 60 - Math.floor(h / 60),
+				p:Number = (v * (1 - s)),
+				q:Number = (v * (1 - f * s)),
+				t:Number = (v * (1 - (1 - f) * s));
+			switch (hi)
+			{
+				case 0: return int(v * 255) << 16 | int(t * 255) << 8 | int(p * 255);
+				case 1: return int(q * 255) << 16 | int(v * 255) << 8 | int(p * 255);
+				case 2: return int(p * 255) << 16 | int(v * 255) << 8 | int(t * 255);
+				case 3: return int(p * 255) << 16 | int(q * 255) << 8 | int(v * 255);
+				case 4: return int(t * 255) << 16 | int(p * 255) << 8 | int(v * 255);
+				case 5: return int(v * 255) << 16 | int(p * 255) << 8 | int(q * 255);
+				default: return 0;
+			}
+			return 0;
+		}
+		
+		/**
 		 * Finds the red factor of a color.
 		 * @param	color		The color to evaluate.
 		 * @return	A uint from 0 to 255.
@@ -504,39 +549,261 @@
 		}
 		
 		/**
-		 * Removes all nulls from the array.
-		 * @param	a		The array to clean.
-		 * @return	The provided array with nulls removed.
+		 * Sets a time flag.
+		 * @return	Time elapsed (in milliseconds) since the last time flag was set.
 		 */
-		public static function removeNulls(a:Array):Array
+		public static function timeFlag():uint
 		{
-			var i:int = 0,
-				j:int = a.length;
-			while (i < j)
+			var t:uint = getTimer(),
+				e:uint = t - _time;
+			_time = t;
+			return e;
+		}
+		
+		/**
+		 * The global Console object.
+		 */
+		public static function get console():Console
+		{
+			if (!_console) _console = new Console;
+			return _console;
+		}
+		
+		/**
+		 * Logs data to the console.
+		 * @param	...data		The data parameters to log, can be variables, objects, etc. Parameters will be separated by a space (" ").
+		 */
+		public static function log(...data):void
+		{
+			if (_console)
 			{
-				while (a[i] != null) i ++;
-				while (a[j] == null) j --;
-				a[i] = a[j];
-				a[j] = null;
+				if (data.length > 1)
+				{
+					var i:int = 0, s:String = "";
+					while (i < data.length)
+					{
+						if (i > 0) s += " ";
+						s += data[i ++].toString();
+					}
+					_console.log(s);
+				}
+				else _console.log(data[0]);
 			}
-			a[j] = a[i];
-			a[i] = null;
-			a.length -= a.length - a.indexOf(null);
+		}
+		
+		/**
+		 * Adds properties to watch in the console's debug panel.
+		 * @param	...properties		The properties (strings) to watch.
+		 */
+		public static function watch(...properties):void
+		{
+			if (_console)
+			{
+				if (properties.length > 1) _console.watch(properties);
+				else _console.watch(properties[0]);
+			}
+		}
+		
+		/**
+		 * Loads the file as an XML object.
+		 * @param	file		The embedded file to load.
+		 * @return	An XML object representing the file.
+		 */
+		public static function getXML(file:Class):XML
+		{
+			var bytes:ByteArray = new file;
+			return XML(bytes.readUTFBytes(bytes.length));
+		}
+		
+		/**
+		 * Tweens numeric public properties of an Object. Shorthand for creating a MultiVarTween tween, starting it and adding it to a Tweener.
+		 * @param	object		The object containing the properties to tween.
+		 * @param	values		An object containing key/value pairs of properties and target values.
+		 * @param	duration	Duration of the tween.
+		 * @param	options		An object containing key/value pairs of the following optional parameters:
+		 * 						type		Tween type.
+		 * 						complete	Optional completion callback function.
+		 * 						ease		Optional easer function.
+		 * 						tweener		The Tweener to add this Tween to.
+		 * @return	The added MultiVarTween object.
+		 * 
+		 * Example: FP.tween(object, { x: 500, y: 350 }, 2.0, { ease: easeFunction, complete: onComplete } );
+		 */
+		public static function tween(object:Object, values:Object, duration:Number, options:Object = null):MultiVarTween
+		{
+			var type:uint = Tween.ONESHOT,
+				complete:Function = null,
+				ease:Function = null,
+				tweener:Tweener = FP.world;
+			if (object is Tweener) tweener = object as Tweener;
+			if (options)
+			{
+				if (options.hasOwnProperty("type")) type = options.type;
+				if (options.hasOwnProperty("complete")) complete = options.complete;
+				if (options.hasOwnProperty("ease")) ease = options.ease;
+				if (options.hasOwnProperty("tweener")) tweener = options.tweener;
+			}
+			var tween:MultiVarTween = new MultiVarTween(complete, type);
+			tween.tween(object, values, duration, ease);
+			tweener.addTween(tween);
+			return tween;
+		}
+		
+		/**
+		 * Gets an array of frame indices.
+		 * @param	from	Starting frame.
+		 * @param	to		Ending frame.
+		 * @param	skip	Skip amount every frame (eg. use 1 for every 2nd frame).
+		 */
+		public static function frames(from:int, to:int, skip:int = 0):Array
+		{
+			var a:Array = [];
+			skip ++;
+			if (from < to)
+			{
+				while (from <= to)
+				{
+					a.push(from);
+					from += skip;
+				}
+			}
+			else
+			{
+				while (from >= to)
+				{
+					a.push(from);
+					from -= skip;
+				}
+			}
 			return a;
 		}
 		
 		/**
-		 * Forces a garbage collector sweep.
+		 * Shuffles the elements in the array.
+		 * @param	a		The Object to shuffle (an Array or Vector).
 		 */
-		public static function cleanup():void
+		public static function shuffle(a:Object):void
 		{
-			System.gc();
-			System.gc();
+			if (a is Array || a is Vector.<*>)
+			{
+				var i:int = a.length, j:int, t:*;
+				while (-- i)
+				{
+					t = a[i];
+					a[i] = a[j = FP.rand(i + 1)];
+					a[j] = t;
+				}
+			}
 		}
 		
-		// World information
+		/**
+		 * Sorts the elements in the array.
+		 * @param	object		The Object to sort (an Array or Vector).
+		 * @param	ascending	If it should be sorted ascending (true) or descending (false).
+		 */
+		public static function sort(object:Object, ascending:Boolean = true):void
+		{
+			if (object is Array || object is Vector.<*>) quicksort(object, 0, object.length - 1, ascending);
+		}
+		
+		/**
+		 * Sorts the elements in the array by a property of the element.
+		 * @param	object		The Object to sort (an Array or Vector).
+		 * @param	property	The numeric property of object's elements to sort by.
+		 * @param	ascending	If it should be sorted ascending (true) or descending (false).
+		 */
+		public static function sortBy(object:Object, property:String, ascending:Boolean = true):void
+		{
+			if (object is Array || object is Vector.<*>) quicksortBy(object, 0, object.length - 1, ascending, property);
+		}
+		
+		/** @private Quicksorts the array. */ 
+		private static function quicksort(a:Object, left:int, right:int, ascending:Boolean):void
+		{
+			var i:int = left, j:int = right, t:Number,
+				p:* = a[Math.round((left + right) * .5)];
+			if (ascending)
+			{
+				while (i <= j)
+				{
+					while (a[i] < p) i ++;
+					while (a[j] > p) j --;
+					if (i <= j)
+					{
+						t = a[i];
+						a[i ++] = a[j];
+						a[j --] = t;
+					}
+				}
+			}
+			else
+			{
+				while (i <= j)
+				{
+					while (a[i] > p) i ++;
+					while (a[j] < p) j --;
+					if (i <= j)
+					{
+						t = a[i];
+						a[i ++] = a[j];
+						a[j --] = t;
+					}
+				}
+			}
+			if (left < j) quicksort(a, left, j, ascending);
+			if (i < right) quicksort(a, i, right, ascending);
+		}
+		
+		/** @private Quicksorts the array by the property. */ 
+		private static function quicksortBy(a:Object, left:int, right:int, ascending:Boolean, property:String):void
+		{
+			var i:int = left, j:int = right, t:Object,
+				p:* = a[Math.round((left + right) * .5)][property];
+			if (ascending)
+			{
+				while (i <= j)
+				{
+					while (a[i][property] < p) i ++;
+					while (a[j][property] > p) j --;
+					if (i <= j)
+					{
+						t = a[i];
+						a[i ++] = a[j];
+						a[j --] = t;
+					}
+				}
+			}
+			else
+			{
+				while (i <= j)
+				{
+					while (a[i][property] > p) i ++;
+					while (a[j][property] < p) j --;
+					if (i <= j)
+					{
+						t = a[i];
+						a[i ++] = a[j];
+						a[j --] = t;
+					}
+				}
+			}
+			if (left < j) quicksortBy(a, left, j, ascending, property);
+			if (i < right) quicksortBy(a, i, right, ascending, property);
+		}
+		
+		// World information.
 		/** @private */ internal static var _world:World;
 		/** @private */ internal static var _goto:World;
+		
+		// Console information.
+		/** @private */ internal static var _console:Console;
+		
+		// Time information.
+		/** @private */ internal static var _time:uint;
+		/** @private */ public static var _updateTime:uint;
+		/** @private */ public static var _renderTime:uint;
+		/** @private */ public static var _gameTime:uint;
+		/** @private */ public static var _flashTime:uint;
 		
 		// Bitmap storage.
 		/** @private */ private static var _bitmap:Object = { };
@@ -556,7 +823,7 @@
 		
 		// Global Flash objects.
 		/** @private */ public static var stage:Stage;
-		/** @private */ public static var engine:Sprite;
+		/** @private */ public static var engine:Engine;
 		
 		// Global objects used for rendering, collision, etc.
 		/** @private */ public static var point:Point = new Point;

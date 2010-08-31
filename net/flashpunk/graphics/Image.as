@@ -61,7 +61,7 @@
 		 * @param	source		Source image.
 		 * @param	clipRect	Optional rectangle defining area of the source image to draw.
 		 */
-		public function Image(source:* = null, clipRect:Rectangle = null) 
+		public function Image(source:*, clipRect:Rectangle = null) 
 		{
 			if (source is Class)
 			{
@@ -77,9 +77,16 @@
 				if (!clipRect.height) clipRect.height = _sourceRect.height;
 				_sourceRect = clipRect;
 			}
+			createBuffer();
+			updateBuffer();
+		}
+		
+		/** @private Creates the buffer. */
+		protected function createBuffer():void
+		{
 			_buffer = new BitmapData(_sourceRect.width, _sourceRect.height, true, 0);
 			_bufferRect = _buffer.rect;
-			update();
+			_bitmap = new Bitmap(_buffer);
 		}
 		
 		/** @public Renders the image. */
@@ -108,7 +115,7 @@
 			if (angle != 0) _matrix.rotate(angle * FP.RAD);
 			_matrix.tx += originX + point.x;
 			_matrix.ty += originY + point.y;
-			FP.buffer.draw(_buffer, _matrix, null, blend, null, smooth);
+			FP.buffer.draw(_bitmap, _matrix, null, blend, null, smooth);
 		}
 		
 		/**
@@ -149,7 +156,7 @@
 		/**
 		 * Updates the image buffer.
 		 */
-		public function update():void
+		public function updateBuffer():void
 		{
 			if (!_source) return;
 			_buffer.copyPixels(_source, _sourceRect, FP.zero);
@@ -176,14 +183,14 @@
 			if (_alpha == 1 && _color == 0xFFFFFF)
 			{
 				_tint = null;
-				return update();
+				return updateBuffer();
 			}
 			_tint = _colorTransform;
 			_tint.redMultiplier = (_color >> 16 & 0xFF) / 255;
 			_tint.greenMultiplier = (_color >> 8 & 0xFF) / 255;
 			_tint.blueMultiplier = (_color & 0xFF) / 255;
 			_tint.alphaMultiplier = _alpha;
-			update();
+			updateBuffer();
 		}
 		
 		/**
@@ -198,14 +205,14 @@
 			if (_alpha == 1 && _color == 0xFFFFFF)
 			{
 				_tint = null;
-				return update();
+				return updateBuffer();
 			}
 			_tint = _colorTransform;
 			_tint.redMultiplier = (_color >> 16 & 0xFF) / 255;
 			_tint.greenMultiplier = (_color >> 8 & 0xFF) / 255;
 			_tint.blueMultiplier = (_color & 0xFF) / 255;
 			_tint.alphaMultiplier = _alpha;
-			update();
+			updateBuffer();
 		}
 		
 		/**
@@ -222,13 +229,13 @@
 			{
 				_source = _flip;
 				_flip = temp;
-				return update();
+				return updateBuffer();
 			}
 			if (_flips[_class])
 			{
 				_source = _flips[_class];
 				_flip = temp;
-				return update();
+				return updateBuffer();
 			}
 			_source = _flips[_class] = new BitmapData(_source.width, _source.height, true, 0);
 			_flip = temp;
@@ -236,18 +243,39 @@
 			FP.matrix.a = -1;
 			FP.matrix.tx = _source.width;
 			_source.draw(temp, FP.matrix);
-			update();
+			updateBuffer();
+		}
+		
+		/**
+		 * Centers the Image's originX/Y to its center.
+		 */
+		public function centerOrigin():void
+		{
+			originX = _bufferRect.width / 2;
+			originY = _bufferRect.height / 2;
+		}
+		
+		/**
+		 * Centers the Image's originX/Y to its center, and negates the offset by the same amount.
+		 */
+		public function centerOO():void
+		{
+			x += originX;
+			y += originY;
+			centerOrigin();
+			x -= originX;
+			y -= originY;
 		}
 		
 		/**
 		 * Width of the image.
 		 */
-		public function get width():uint { return _bufferRect.width; }
+		public function get width():uint { return _bufferRect.width * scaleX * scale; }
 		
 		/**
 		 * Height of the image.
 		 */
-		public function get height():uint { return _bufferRect.height; }
+		public function get height():uint { return _bufferRect.height * scaleY * scale; }
 		
 		/**
 		 * Clipping rectangle for the image.
@@ -262,13 +290,14 @@
 		/** @protected */ protected var _sourceRect:Rectangle;
 		/** @protected */ protected var _buffer:BitmapData;
 		/** @protected */ protected var _bufferRect:Rectangle;
+		/** @protected */ protected var _bitmap:Bitmap;
 		
 		// Color and alpha information.
-		/** @protected */ protected var _alpha:Number = 1;
-		/** @protected */ protected var _color:uint = 0x00FFFFFF;
+		/** @private */ private var _alpha:Number = 1;
+		/** @private */ private var _color:uint = 0x00FFFFFF;
 		/** @protected */ protected var _tint:ColorTransform;
-		/** @protected */ protected var _colorTransform:ColorTransform = new ColorTransform;
-		/** @protected */ protected var _matrix:Matrix = FP.matrix;
+		/** @private */ private var _colorTransform:ColorTransform = new ColorTransform;
+		/** @private */ private var _matrix:Matrix = FP.matrix;
 		
 		// Flipped image information.
 		/** @protected */ protected var _class:String;

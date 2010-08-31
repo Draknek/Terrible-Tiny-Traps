@@ -26,6 +26,11 @@
 		public var active:Boolean;
 		
 		/**
+		 * Tween completion callback.
+		 */
+		public var complete:Function;
+		
+		/**
 		 * Constructor. Specify basic information about the Tween.
 		 * @param	duration		Duration of the tween (in seconds or frames).
 		 * @param	type			Tween type, one of Tween.PERSIST (default), Tween.LOOPING, or Tween.ONESHOT.
@@ -36,7 +41,7 @@
 		{
 			_target = duration;
 			_type = type;
-			_complete = complete;
+			this.complete = complete;
 			_ease = ease;
 		}
 		
@@ -91,31 +96,22 @@
 					break;
 			}
 			_finish = false;
-			if (_complete != null) _complete();
+			if (complete != null) complete();
 		}
 		
 		/**
 		 * The completion percentage of the Tween.
 		 */
 		public function get percent():Number { return _time / _target; }
+		public function set percent(value:Number):void { _time = _target * value; }
 		
 		/**
 		 * The current time scale of the Tween (after easer has been applied).
 		 */
 		public function get scale():Number { return _t; }
 		
-		/**
-		 * The completion callback.
-		 */
-		public function get complete():Function { return _complete; }
-		public function set complete(value:Function):void
-		{
-			_complete = value;
-		}
-		
 		// Tween information.
 		/** @private */ private var _type:uint;
-		/** @private */ private var _complete:Function;
 		/** @private */ protected var _ease:Function;
 		/** @private */ protected var _t:Number = 0;
 		

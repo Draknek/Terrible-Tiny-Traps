@@ -18,7 +18,8 @@
 	{
 		/**
 		 * The blending mode used by Draw functions. This will not
-		 * apply to Draw.line(), but will apply to Draw.linePlus().
+		 * apply to Draw.line() or Draw.circle(), but will apply
+		 * to Draw.linePlus() and Draw.circlePlus().
 		 */
 		public static var blend:String;
 		
@@ -42,7 +43,7 @@
 		{
 			_target = FP.buffer;
 			_camera = FP.camera;
-			blend = null;
+			Draw.blend = null;
 		}
 		
 		/**
@@ -53,9 +54,9 @@
 		 * @param	y2		Ending y position.
 		 * @param	color	Color of the line.
 		 */
-		public static function line(x1:int, y1:int, x2:int, y2:int, color:uint = 0xFFFFFF):void
+		public static function line(x1:int, y1:int, x2:int, y2:int, color:uint = 0xFFFFFF, alpha:Number = 1.0):void
 		{
-			color &= 0xFFFFFF;
+			color = (uint(alpha * 0xFF) << 24) | (color & 0xFFFFFF);
 			
 			// get the drawing positions
 			x1 -= _camera.x;
@@ -75,17 +76,17 @@
 			{
 				if (Y == 0)
 				{
-					screen.setPixel(x1, y1, color);
+					screen.setPixel32(x1, y1, color);
 					return;
 				}
 				// draw a straight vertical line
 				yy = y2 > y1 ? 1 : -1;
 				while (y1 != y2)
 				{
-					screen.setPixel(x1, y1, color);
+					screen.setPixel32(x1, y1, color);
 					y1 += yy;
 				}
-				screen.setPixel(x2, y2, color);
+				screen.setPixel32(x2, y2, color);
 				return;
 			}
 			
@@ -95,10 +96,10 @@
 				xx = x2 > x1 ? 1 : -1;
 				while (x1 != x2)
 				{
-					screen.setPixel(x1, y1, color);
+					screen.setPixel32(x1, y1, color);
 					x1 += xx;
 				}
-				screen.setPixel(x2, y2, color);
+				screen.setPixel32(x2, y2, color);
 				return;
 			}
 			
@@ -113,7 +114,7 @@
 				c = .5;
 				while (x1 != x2)
 				{
-					screen.setPixel(x1, y1, color);
+					screen.setPixel32(x1, y1, color);
 					x1 += xx;
 					c += slope;
 					if (c >= 1)
@@ -122,8 +123,7 @@
 						c -= 1;
 					}
 				}
-				screen.setPixel(x2, y2, color);
-				return;
+				screen.setPixel32(x2, y2, color);
 			}
 			else
 			{
@@ -131,7 +131,7 @@
 				c = .5;
 				while (y1 != y2)
 				{
-					screen.setPixel(x1, y1, color);
+					screen.setPixel32(x1, y1, color);
 					y1 += yy;
 					c += slope;
 					if (c >= 1)
@@ -140,8 +140,7 @@
 						c -= 1;
 					}
 				}
-				screen.setPixel(x2, y2, color);
-				return;
+				screen.setPixel32(x2, y2, color);
 			}
 		}
 		
@@ -177,13 +176,15 @@
 		{
 			if (alpha >= 1 && !blend)
 			{
-				if (color < 0xFF000000) color += 0xFF000000;
+				if (color < 0xFF000000) color = 0xFF000000 | color;
 				_rect.x = x - _camera.x;
 				_rect.y = y - _camera.y;
 				_rect.width = width;
 				_rect.height = height;
 				_target.fillRect(_rect, color);
+				return;
 			}
+			if (color > 0xFFFFFF) color = 0xFFFFFF & color;
 			_graphics.clear();
 			_graphics.beginFill(color, alpha);
 			_graphics.drawRect(x - _camera.x, y - _camera.y, width, height);
@@ -191,19 +192,72 @@
 		}
 		
 		/**
-		 * Draws a filled circle.
+		 * Draws a non-filled, pixelated circle.
+		 * @param	x			Center x position.
+		 * @param	y			Center y position.
+		 * @param	radius		Radius of the circle.
+		 * @param	color		Color of the circle.
+		 */
+		public static function circle(x:int, y:int, radius:int, color:uint = 0xFFFFFF):void
+		{
+			if (color < 0xFF000000) color = 0xFF000000 | color;
+			x -= _camera.x;
+			y -= _camera.y;
+			var f:int = 1 - radius,
+				fx:int = 1,
+				fy:int = -2 * radius,
+				xx:int = 0,
+				yy:int = radius;
+			_target.setPixel32(x, y + radius, color);
+			_target.setPixel32(x, y - radius, color);
+			_target.setPixel32(x + radius, y, color);
+			_target.setPixel32(x - radius, y, color);
+			while (xx < yy)
+			{
+				if (f >= 0) 
+				{
+					yy --;
+					fy += 2;
+					f += fy;
+				}
+				xx ++;
+				fx += 2;
+				f += fx;    
+				_target.setPixel32(x + xx, y + yy, color);
+				_target.setPixel32(x - xx, y + yy, color);
+				_target.setPixel32(x + xx, y - yy, color);
+				_target.setPixel32(x - xx, y - yy, color);
+				_target.setPixel32(x + yy, y + xx, color);
+				_target.setPixel32(x - yy, y + xx, color);
+				_target.setPixel32(x + yy, y - xx, color);
+				_target.setPixel32(x - yy, y - xx, color);
+			}
+		}
+		
+		/**
+		 * Draws a circle to the screen.
 		 * @param	x			X position of the circle's center.
 		 * @param	y			Y position of the circle's center.
 		 * @param	radius		Radius of the circle.
 		 * @param	color		Color of the circle.
 		 * @param	alpha		Alpha of the circle.
+		 * @param	fill		If the circle should be filled with the color (true) or just an outline (false).
+		 * @param	thick		How thick the outline should be (only applicable when fill = false).
 		 */
-		public static function circle(x:int, y:int, radius:Number, color:uint = 0x000000, alpha:Number = 1):void
+		public static function circlePlus(x:int, y:int, radius:Number, color:uint = 0xFFFFFF, alpha:Number = 1, fill:Boolean = true, thick:int = 1):void
 		{
 			_graphics.clear();
-			_graphics.beginFill(color & 0xFFFFFF, alpha);
-			_graphics.drawCircle(x - _camera.x, y - _camera.y, radius);
-			_graphics.endFill();
+			if (fill)
+			{
+				_graphics.beginFill(color & 0xFFFFFF, alpha);
+				_graphics.drawCircle(x - _camera.x, y - _camera.y, radius);
+				_graphics.endFill();
+			}
+			else
+			{
+				_graphics.lineStyle(thick, color & 0xFFFFFF, alpha);
+				_graphics.drawCircle(x - _camera.x, y - _camera.y, radius);
+			}
 			_target.draw(FP.sprite, null, null, blend);
 		}
 		
@@ -218,7 +272,7 @@
 		{
 			if (outline)
 			{
-				if (color < 0xFF000000) color += 0xFF000000;
+				if (color < 0xFF000000) color = 0xFF000000 | color;
 				var x:int = e.x - e.originX - _camera.x,
 					y:int = e.y - e.originY - _camera.y;
 				_rect.x = x;
@@ -236,15 +290,17 @@
 				_target.fillRect(_rect, color);
 				return;
 			}
-			if (alpha >= 1)
+			if (alpha >= 1 && !blend)
 			{
-				if (color < 0xFF000000) color += 0xFF000000;
+				if (color < 0xFF000000) color = 0xFF000000 | color;
 				_rect.x = e.x - e.originX - _camera.x;
 				_rect.y = e.y - e.originY - _camera.y;
 				_rect.width = e.width;
 				_rect.height = e.height;
 				_target.fillRect(_rect, color);
+				return;
 			}
+			if (color > 0xFFFFFF) color = 0xFFFFFF & color;
 			_graphics.clear();
 			_graphics.beginFill(color, alpha);
 			_graphics.drawRect(e.x - e.originX - _camera.x, e.y - e.originY - _camera.y, e.width, e.height);
@@ -252,7 +308,7 @@
 		}
 		
 		/**
-		 * Draws a quadratic curve to the screen.
+		 * Draws a quadratic curve.
 		 * @param	x1		X start.
 		 * @param	y1		Y start.
 		 * @param	x2		X control point, used to determine the curve.
@@ -260,12 +316,12 @@
 		 * @param	x3		X finish.
 		 * @param	y3		Y finish.
 		 */
-		public static function curve(x1:int, y1:int, x2:int, y2:int, x3:int, y3:int):void
+		public static function curve(x1:int, y1:int, x2:int, y2:int, x3:int, y3:int, color:uint = 0xFFFFFF, alpha:Number = 1, thick:Number = 1):void
 		{
 			_graphics.clear();
-			_graphics.lineStyle(1, 0xFF0000);
-			_graphics.moveTo(x1, y1);
-			_graphics.curveTo(x2, y2, x3, y3);
+			_graphics.lineStyle(thick, color & 0xFFFFFF, alpha);
+			_graphics.moveTo(x1 - _camera.x, y1 - _camera.y);
+			_graphics.curveTo(x2 - _camera.x, y2 - _camera.y, x3 - _camera.x, y3 - _camera.y);
 			_target.draw(FP.sprite, null, null, blend);
 		}
 		

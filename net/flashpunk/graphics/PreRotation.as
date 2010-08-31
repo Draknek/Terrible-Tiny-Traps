@@ -85,13 +85,12 @@
 				_frame.x = _frame.width * _last;
 				_frame.y = uint(_frame.x / _width) * _frame.height;
 				_frame.x %= _width;
-				update();
+				updateBuffer();
 			}
 			super.render(point, camera);
 		}
 		
 		// Rotation information.
-		/** @private */ private var _source:BitmapData;
 		/** @private */ private var _width:uint;
 		/** @private */ private var _frame:Rectangle;
 		/** @private */ private var _frameCount:uint;

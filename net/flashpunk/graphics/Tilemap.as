@@ -12,6 +12,11 @@
 	public class Tilemap extends Canvas
 	{
 		/**
+		 * If x/y positions should be used instead of columns/rows.
+		 */
+		public var usePositions:Boolean;
+		
+		/**
 		 * Constructor.
 		 * @param	tileset			The source tileset image.
 		 * @param	width			Width of the tilemap, in pixels.
@@ -51,6 +56,11 @@
 		 */
 		public function setTile(column:uint, row:uint, index:uint = 0):void
 		{
+			if (usePositions)
+			{
+				column /= _tile.width;
+				row /= _tile.height;
+			}
 			index %= _setCount;
 			column %= _columns;
 			row %= _rows;
@@ -69,6 +79,11 @@
 		 */
 		public function clearTile(column:uint, row:uint):void
 		{
+			if (usePositions)
+			{
+				column /= _tile.width;
+				row /= _tile.height;
+			}
 			column %= _columns;
 			row %= _rows;
 			_tile.x = column * _tile.width;
@@ -84,6 +99,11 @@
 		 */
 		public function getTile(column:uint, row:uint):uint
 		{
+			if (usePositions)
+			{
+				column /= _tile.width;
+				row /= _tile.height;
+			}
 			return _map.getPixel(column % _columns, row % _rows);
 		}
 		
@@ -97,11 +117,20 @@
 		 */
 		public function setRegion(column:uint, row:uint, width:uint = 1, height:uint = 1, index:uint = 0):void
 		{
+			if (usePositions)
+			{
+				column /= _tile.width;
+				row /= _tile.height;
+				width /= _tile.width;
+				height /= _tile.height;
+			}
 			column %= _columns;
 			row %= _rows;
 			var c:uint = column,
 				r:uint = column + width,
-				b:uint = row + height;
+				b:uint = row + height,
+				u:Boolean = usePositions;
+			usePositions = false;
 			while (row < b)
 			{
 				while (column < r)
@@ -112,6 +141,7 @@
 				column = c;
 				row ++;
 			}
+			usePositions = u;
 		}
 		
 		/**
@@ -123,11 +153,20 @@
 		 */
 		public function clearRegion(column:uint, row:uint, width:uint = 1, height:uint = 1):void
 		{
+			if (usePositions)
+			{
+				column /= _tile.width;
+				row /= _tile.height;
+				width /= _tile.width;
+				height /= _tile.height;
+			}
 			column %= _columns;
 			row %= _rows;
 			var c:uint = column,
 				r:uint = column + width,
-				b:uint = row + height;
+				b:uint = row + height,
+				u:Boolean = usePositions;
+			usePositions = false;
 			while (row < b)
 			{
 				while (column < r)
@@ -138,60 +177,51 @@
 				column = c;
 				row ++;
 			}
+			usePositions = u;
 		}
 		
 		/**
-		 * Loads the Tilemap data from a string.
-		 * @param	str			The string data, which is a set of tile values separated by the columnSep and rowSep strings.
-		 * @param	columnSep	The string that separates each tile value on a row, default is ",".
-		 * @param	rowSep		The string that separates each row of tiles, default is "\n".
-		 */
+		* Loads the Tilemap tile index data from a string.
+		* @param str			The string data, which is a set of tile values separated by the columnSep and rowSep strings.
+		* @param columnSep		The string that separates each tile value on a row, default is ",".
+		* @param rowSep			The string that separates each row of tiles, default is "\n".
+		*/
 		public function loadFromString(str:String, columnSep:String = ",", rowSep:String = "\n"):void
 		{
-			var row: Array = str.split(rowSep);
-			var rows: int = row.length;
-			
-			for (var y:int = 0; y < rows; y++)
+			var row:Array = str.split(rowSep),
+				rows:int = row.length,
+				col:Array, cols:int, x:int, y:int;
+			for (y = 0; y < rows; y ++)
 			{
-				if (row[y] == '') { continue; }
-				
-				var col: Array = row[y].split(columnSep);
-				var cols: int = col.length;
-				
-				for (var x:int = 0; x < cols; x++)
+				if (row[y] == '') continue;
+				col = row[y].split(columnSep),
+				cols = col.length;
+				for (x = 0; x < cols; x ++)
 				{
-					if (col[x] == '') { continue; }
-					
+					if (col[x] == '') continue;
 					setTile(x, y, uint(col[x]));
 				}
 			}
 		}
 		
 		/**
-		 * Saves the Tilemap data to a string.
-		 * @param	columnSep	The string that separates each tile value on a row, default is ",".
-		 * @param	rowSep		The string that separates each row of tiles, default is "\n".
-		 */
+		* Saves the Tilemap tile index data to a string.
+		* @param columnSep		The string that separates each tile value on a row, default is ",".
+		* @param rowSep			The string that separates each row of tiles, default is "\n".
+		*/
 		public function saveToString(columnSep:String = ",", rowSep:String = "\n"): String
 		{
-			var s: String = '';
-			
-			for (var y:int = 0; y < _rows; y++)
+			var s:String = '',
+				x:int, y:int;
+			for (y = 0; y < _rows; y ++)
 			{
-				for (var x:int = 0; x < _columns; x++)
+				for (x = 0; x < _columns; x ++)
 				{
 					s += getTile(x, y);
-					
-					if (x != _columns - 1) {
-						s += columnSep;
-					}
+					if (x != _columns - 1) s += columnSep;
 				}
-				
-				if (y != _rows - 1) {
-					s += rowSep;
-				}
+				if (y != _rows - 1) s += rowSep;
 			}
-			
 			return s;
 		}
 		

@@ -1,7 +1,9 @@
 ﻿package net.flashpunk.graphics 
 {
+	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Graphics;
+	import flash.geom.ColorTransform;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
@@ -13,6 +15,11 @@
 	 */
 	public class Canvas extends Graphic
 	{
+		/**
+		 * Optional blend mode to use (see flash.display.BlendMode for blending modes).
+		 */
+		public var blend:String;
+		
 		/**
 		 * Constructor.
 		 * @param	width		Width of the canvas.
@@ -58,7 +65,14 @@
 				while (xx < _refWidth)
 				{
 					buffer = _buffers[_ref.getPixel(xx, yy)];
-					FP.buffer.copyPixels(buffer, buffer.rect, point, null, null, true);
+					if (_tint || blend)
+					{
+						_matrix.tx = point.x;
+						_matrix.ty = point.y;
+						_bitmap.bitmapData = buffer;
+						FP.buffer.draw(_bitmap, _matrix, _tint, blend);
+					}
+					else FP.buffer.copyPixels(buffer, buffer.rect, point, null, null, true);
 					point.x += _maxWidth;
 					xx ++;
 				}
@@ -253,6 +267,49 @@
 		}
 		
 		/**
+		 * The tinted color of the Canvas. Use 0xFFFFFF to draw the it normally.
+		 */
+		public function get color():uint { return _color; }
+		public function set color(value:uint):void
+		{
+			value %= 0xFFFFFF;
+			if (_color == value) return;
+			_color = value;
+			if (_alpha == 1 && _color == 0xFFFFFF)
+			{
+				_tint = null;
+				return;
+			}
+			_tint = _colorTransform;
+			_tint.redMultiplier = (_color >> 16 & 0xFF) / 255;
+			_tint.greenMultiplier = (_color >> 8 & 0xFF) / 255;
+			_tint.blueMultiplier = (_color & 0xFF) / 255;
+			_tint.alphaMultiplier = _alpha;
+		}
+		
+		/**
+		 * Change the opacity of the Canvas, a value from 0 to 1.
+		 */
+		public function get alpha():Number { return _alpha; }
+		public function set alpha(value:Number):void
+		{
+			if (value < 0) value = 0;
+			if (value > 1) value = 1;
+			if (_alpha == value) return;
+			_alpha = value;
+			if (_alpha == 1 && _color == 0xFFFFFF)
+			{
+				_tint = null;
+				return;
+			}
+			_tint = _colorTransform;
+			_tint.redMultiplier = (_color >> 16 & 0xFF) / 255;
+			_tint.greenMultiplier = (_color >> 8 & 0xFF) / 255;
+			_tint.blueMultiplier = (_color & 0xFF) / 255;
+			_tint.alphaMultiplier = _alpha;
+		}
+		
+		/**
 		 * Width of the canvas.
 		 */
 		public function get width():uint { return _width; }
@@ -268,6 +325,14 @@
 		/** @private */ protected var _height:uint;
 		/** @private */ protected var _maxWidth:uint = 4000;
 		/** @private */ protected var _maxHeight:uint = 4000;
+		/** @private */ protected var _bitmap:Bitmap = new Bitmap;
+		
+		// Color tinting information.
+		/** @private */ private var _color:uint = 0xFFFFFF;
+		/** @private */ private var _alpha:Number = 1;
+		/** @private */ private var _tint:ColorTransform;
+		/** @private */ private var _colorTransform:ColorTransform = new ColorTransform;
+		/** @private */ private var _matrix:Matrix = new Matrix;
 		
 		// Canvas reference information.
 		/** @private */ private var _ref:BitmapData;

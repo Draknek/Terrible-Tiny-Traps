@@ -22,11 +22,6 @@
 		public var collidable:Boolean = true;
 		
 		/**
-		 * If the Entity is persistent across Worlds when FP.switchWorld() is called.
-		 */
-		public var persist:Boolean = false;
-		
-		/**
 		 * X position of the Entity in the World.
 		 */
 		public var x:Number = 0;
@@ -90,6 +85,16 @@
 		}
 		
 		/**
+		 * Updates the Entity's graphic. If you override this for
+		 * update logic, remember to call super.update() if you're
+		 * using a Graphic type that animates (eg. Spritemap).
+		 */
+		override public function update():void 
+		{
+			
+		}
+		
+		/**
 		 * Renders the Entity. If you override this for special behaviour,
 		 * remember to call super.render() to render the Entity's graphic.
 		 */
@@ -97,8 +102,12 @@
 		{
 			if (_graphic && _graphic.visible)
 			{
-				_point.x = x;
-				_point.y = y;
+				if (_graphic.relative)
+				{
+					_point.x = x;
+					_point.y = y;
+				}
+				else _point.x = _point.y = 0;
 				_camera.x = FP.camera.x;
 				_camera.y = FP.camera.y;
 				_graphic.render(_point, _camera);
@@ -164,12 +173,12 @@
 		
 		/**
 		 * Checks for collision against multiple Entity types.
-		 * @param	types		An array of Entity types to check for.
+		 * @param	types		An Array or Vector of Entity types to check for.
 		 * @param	x			Virtual x position to place this Entity.
 		 * @param	y			Virtual y position to place this Entity.
 		 * @return	The first Entity collided with, or null if none were collided.
 		 */
-		public function collideTypes(types:Array, x:Number, y:Number):Entity
+		public function collideTypes(types:Object, x:Number, y:Number):Entity
 		{
 			var e:Entity;
 			for each (var type:String in types)
@@ -229,7 +238,6 @@
 		 */
 		public function collideRect(x:Number, y:Number, rX:Number, rY:Number, rWidth:Number, rHeight:Number):Boolean
 		{
-			if (!collidable) return false;
 			if (x - originX + width >= rX && y - originY + height >= rY
 			&& x - originX <= rX + rWidth && y - originY <= rY + rHeight)
 			{
@@ -261,9 +269,8 @@
 		 */
 		public function collidePoint(x:Number, y:Number, pX:Number, pY:Number):Boolean
 		{
-			if (!collidable) return false;
 			if (pX >= x - originX && pY >= y - originY
-			&& pX <= x - originX + width && pY <= y - originY + height)
+			&& pX < x - originX + width && pY < y - originY + height)
 			{
 				if (!_mask) return true;
 				_x = this.x; _y = this.y;
@@ -288,13 +295,13 @@
 		 * @param	type		The Entity type to check for.
 		 * @param	x			Virtual x position to place this Entity.
 		 * @param	y			Virtual y position to place this Entity.
-		 * @param	array		The array to populate.
+		 * @param	array		The Array or Vector object to populate.
 		 * @return	The array, populated with all collided Entities.
 		 */
-		public function collideInto(type:String, x:Number, y:Number, array:Array):Array
+		public function collideInto(type:String, x:Number, y:Number, array:Object):void
 		{
 			var e:Entity = FP._world._typeFirst[type];
-			if (!collidable || !e) return array;
+			if (!collidable || !e) return;
 			
 			_x = this.x; _y = this.y;
 			this.x = x; this.y = y;
@@ -315,7 +322,7 @@
 					e = e._typeNext;
 				}
 				this.x = _x; this.y = _y;
-				return array;
+				return;
 			}
 			
 			while (e)
@@ -331,7 +338,7 @@
 				e = e._typeNext;
 			}
 			this.x = _x; this.y = _y;
-			return array;
+			return;
 		}
 		
 		/**
@@ -339,13 +346,28 @@
 		 * @param	types		An array of Entity types to check for.
 		 * @param	x			Virtual x position to place this Entity.
 		 * @param	y			Virtual y position to place this Entity.
-		 * @param	array		The array to populate.
+		 * @param	array		The Array or Vector object to populate.
 		 * @return	The array, populated with all collided Entities.
 		 */
-		public function collideTypesInto(types:Array, x:Number, y:Number, array:Array):Array
+		public function collideTypesInto(types:Object, x:Number, y:Number, array:Object):void
 		{
 			for each (var type:String in types) collideInto(type, x, y, array);
-			return array;
+		}
+		
+		/**
+		 * If the Entity collides with the camera rectangle.
+		 */
+		public function get onCamera():Boolean
+		{
+			return collideRect(x, y, FP.camera.x, FP.camera.y, FP.width, FP.height);
+		}
+		
+		/**
+		 * The World object this Entity has been added to.
+		 */
+		public function get world():World
+		{
+			return _world;
 		}
 		
 		/**
@@ -355,7 +377,7 @@
 		public function set layer(value:int):void
 		{
 			if (_layer == value) return;
-			if (!_world)
+			if (!_added)
 			{
 				_layer = value;
 				return;
@@ -403,7 +425,7 @@
 		{
 			if (_graphic == value) return;
 			_graphic = value;
-			if (_graphic._assign != null) _graphic._assign();
+			if (value && value._assign != null) value._assign();
 		}
 		
 		/**
@@ -419,6 +441,15 @@
 			this.height = height;
 			this.originX = originX;
 			this.originY = originY;
+		}
+		
+		/**
+		 * Center's the Entity's origin (half width & height).
+		 */
+		public function centerOrigin():void
+		{
+			originX = width / 2;
+			originY = height / 2;
 		}
 		
 		/**
@@ -457,6 +488,16 @@
 		public function distanceToRect(rx:Number, ry:Number, rwidth:Number, rheight:Number):Number
 		{
 			return FP.distanceRects(rx, ry, rwidth, rheight, x - originX, y - originY, width, height);
+		}
+		
+		/**
+		 * Gets the class name as a string.
+		 * @return	A string representing the class name.
+		 */
+		public function toString():String
+		{
+			var s:String = String(_class);
+			return s.substring(7, s.length - 1);
 		}
 		
 		// Entity information.

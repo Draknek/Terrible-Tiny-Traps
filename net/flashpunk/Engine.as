@@ -21,6 +21,11 @@
 	public class Engine extends MovieClip
 	{
 		/**
+		 * If the game should stop updating/rendering.
+		 */
+		public var paused:Boolean = false;
+		
+		/**
 		 * Constructor. Defines startup information about your game.
 		 * @param	width			The width of your game.
 		 * @param	height			The height of your game.
@@ -32,7 +37,7 @@
 			// global game properties
 			FP.width = width;
 			FP.height = height;
-			FP.frameRate = frameRate;
+			FP.assignedFrameRate = frameRate;
 			FP.fixed = fixed;
 			
 			// global game objects
@@ -44,7 +49,7 @@
 			// miscellanious startup stuff
 			if (FP.randomSeed == 0) FP.randomizeSeed();
 			FP.entity = new Entity;
-			FP.cleanup();
+			FP._time = getTimer();
 			
 			// on-stage event listener
 			addEventListener(Event.ADDED_TO_STAGE, onStage);
@@ -68,6 +73,8 @@
 				if (FP._world._tween) FP._world.updateTweens();
 				FP._world.update();
 			}
+			FP._world.updateLists();
+			if (FP._goto) checkWorld();
 		}
 		
 		/**
@@ -75,8 +82,23 @@
 		 */
 		public function render():void
 		{
+			// timing stuff
+			var t:Number = getTimer();
+			if (!_frameLast) _frameLast = t;
+			
+			// render loop
+			FP.screen.swap();
+			Draw.resetTarget();
 			FP.screen.refresh();
 			if (FP._world.visible) FP._world.render();
+			FP.screen.redraw();
+			
+			// more timing stuff
+			t = getTimer();
+			_frameListSum += (_frameList[_frameList.length] = t - _frameLast);
+			if (_frameList.length > 10) _frameListSum -= _frameList.shift();
+			FP.frameRate = 1000 / (_frameListSum / _frameList.length);
+			_frameLast = t;
 		}
 		
 		/**
@@ -84,7 +106,7 @@
 		 */
 		public function setStageProperties():void
 		{
-			stage.frameRate = FP.frameRate;
+			stage.frameRate = FP.assignedFrameRate;
 			stage.align = StageAlign.TOP_LEFT;
 			stage.quality = StageQuality.HIGH;
 			stage.scaleMode = StageScaleMode.NO_SCALE;
@@ -105,16 +127,16 @@
 			Input.enable();
 			
 			// switch worlds
-			if (FP._goto) switchWorld();
+			if (FP._goto) checkWorld();
 			
 			// game start
 			init();
 			
 			// start game loop
+			_rate = 1000 / FP.assignedFrameRate;
 			if (FP.fixed)
 			{
 				// fixed framerate
-				_rate = 1000 / FP.frameRate;
 				_skip = _rate * MAX_FRAMESKIP;
 				_last = _prev = getTimer();
 				_timer = new Timer(TICK_RATE);
@@ -133,37 +155,34 @@
 		private function onEnterFrame(e:Event):void
 		{
 			// update timer
-			_time = getTimer();
+			_time = _gameTime = getTimer();
+			FP._flashTime = _time - _flashTime;
+			_updateTime = _time;
 			FP.elapsed = (_time - _last) / 1000;
-			_last = _time;
-			
-			// apply timescale
 			if (FP.elapsed > MAX_ELAPSED) FP.elapsed = MAX_ELAPSED;
 			FP.elapsed *= FP.rate;
+			_last = _time;
 			
-			// swap buffers
-			FP.screen.swap();
+			// update console
+			if (FP._console) FP._console.update();
 			
 			// update loop
-			update();
-			
-			// update entity lists
-			FP._world.updateLists();
+			if (!paused) update();
 			
 			// update input
 			Input.update();
 			
-			// reset drawing target
-			Draw.resetTarget();
+			// update timer
+			_time = _renderTime = getTimer();
+			FP._updateTime = _time - _updateTime;
 			
 			// render loop
-			render();
+			if (!paused) render();
 			
-			// redraw buffers
-			FP.screen.redraw();
-			
-			// switch worlds
-			if (FP._goto) switchWorld();
+			// update timer
+			_time = _flashTime = getTimer();
+			FP._renderTime = _time - _renderTime;
+			FP._gameTime = _time - _gameTime;
 		}
 		
 		/** @private Fixed framerate game loop. */
@@ -177,65 +196,61 @@
 			// quit if a frame hasn't passed
 			if (_delta < _rate) return;
 			
-			// swap buffers
-			FP.screen.swap();
+			// update timer
+			_gameTime = _time;
+			FP._flashTime = _time - _flashTime;
 			
-			// update the game
+			// update console
+			if (FP._console) FP._console.update();
+			
+			// update loop
 			if (_delta > _skip) _delta = _skip;
 			while (_delta > _rate)
 			{
 				// update timer
+				_updateTime = _time;
 				_delta -= _rate;
-				_time = getTimer();
 				FP.elapsed = (_time - _prev) / 1000;
-				_prev = _time;
-				
-				// apply timescale
 				if (FP.elapsed > MAX_ELAPSED) FP.elapsed = MAX_ELAPSED;
 				FP.elapsed *= FP.rate;
+				_prev = _time;
 				
 				// update loop
-				update();
-				
-				// update entity lists
-				FP._world.updateLists();
+				if (!paused) update();
 				
 				// update input
 				Input.update();
+				
+				// update timer
+				_time = getTimer();
+				FP._updateTime = _time - _updateTime;
 			}
 			
-			// reset drawing target
-			Draw.resetTarget();
+			// update timer
+			_renderTime = _time;
 			
 			// render loop
-			render();
+			if (!paused) render();
 			
-			// redraw buffers
-			FP.screen.redraw();
-			
-			// request immediate screen update
-			e.updateAfterEvent();
-			
-			// switch worlds
-			if (FP._goto) switchWorld();
+			// update timer
+			_time = _flashTime = getTimer();
+			FP._renderTime = _time - _renderTime;
+			FP._gameTime =  _time - _gameTime;
 		}
 		
 		/** @private Switch Worlds if they've changed. */
-		private function switchWorld():void
+		private function checkWorld():void
 		{
 			if (!FP._goto) return;
 			FP._world.end();
-			if (FP._world)
-			{
-				if (FP._world.autoClear && FP._world._tween) FP._world.clearTweens();
-				if (FP._goto._inherit) FP._goto.inherit(FP._world, FP._goto._inheritAll);
-			}
+			FP._world.updateLists();
+			if (FP._world && FP._world.autoClear && FP._world._tween) FP._world.clearTweens();
 			FP._world = FP._goto;
 			FP._goto = null;
-			FP._world.updateLists(); // make newly added entities available in begin()
+			FP.camera = FP._world.camera;
+			FP._world.updateLists();
 			FP._world.begin();
-			FP._world.updateLists(); // make newly added entities available in first update()
-			FP.cleanup();
+			FP._world.updateLists();
 		}
 		
 		// Timing information.
@@ -247,9 +262,20 @@
 		/** @private */ private var	_skip:Number;
 		/** @private */ private var _prev:Number;
 		
+		// Debug timing information.
+		/** @private */ private var _updateTime:uint;
+		/** @private */ private var _renderTime:uint;
+		/** @private */ private var _gameTime:uint;
+		/** @private */ private var _flashTime:uint;
+		
 		// Game constants.
 		/** @private */ private const MAX_ELAPSED:Number = 0.0333;
 		/** @private */ private const MAX_FRAMESKIP:Number = 5;
 		/** @private */ private const TICK_RATE:uint = 4;
+		
+		// FrameRate tracking.
+		/** @private */ private var _frameLast:uint = 0;
+		/** @private */ private var _frameListSum:uint = 0;
+		/** @private */ private var _frameList:Vector.<uint> = new Vector.<uint>;
 	}
 }

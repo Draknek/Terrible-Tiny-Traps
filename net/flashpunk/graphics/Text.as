@@ -35,24 +35,50 @@
 		public static var wordWrap:Boolean = false;
 		
 		/**
+		 * The resizable property to assign to new Text objects.
+		 */
+		public static var resizable: Boolean = true;
+		
+		/**
 		 * If the text field can automatically resize if its contents grow.
 		 */
-		public var resizable: Boolean = true;
+		public var resizable: Boolean;
 		
 		/**
 		 * Constructor.
 		 * @param	text		Text to display.
 		 * @param	x			X offset.
 		 * @param	y			Y offset.
-		 * @param	width		Image width (leave as 0 to size to the starting text string).
-		 * @param	height		Image height (leave as 0 to size to the starting text string).
+		 * @param	options		An object containing key/value pairs of the following optional parameters:
+		 * 						font		Font family.
+		 * 						size		Font size.
+		 * 						align		Alignment ("left", "center" or "right").
+		 * 						wordWrap	Automatic word wrapping.
+		 * 						resizable	If the text field can automatically resize if its contents grow.
+		 * 						width		Initial buffer width.
+		 * 						height		Initial buffer height.
+		 * 						color		Text color.
 		 */
-		public function Text(text:String, x:Number = 0, y:Number = 0, width:uint = 0, height:uint = 0)
+		public function Text(text:String, x:Number = 0, y:Number = 0, options:Object = null)
 		{
 			_font = Text.font;
 			_size = Text.size;
 			_align = Text.align;
 			_wordWrap = Text.wordWrap;
+			resizable = Text.resizable;
+			var width:uint = 0;
+			var height:uint = 0;
+			
+			if (options)
+			{
+				if (options.hasOwnProperty("font")) _font = options.font;
+				if (options.hasOwnProperty("size")) _size = options.size;
+				if (options.hasOwnProperty("align")) _align = options.align;
+				if (options.hasOwnProperty("wordWrap")) _wordWrap = options.wordWrap;
+				if (options.hasOwnProperty("resizable")) resizable = options.resizable;
+				if (options.hasOwnProperty("width")) width = options.width;
+				if (options.hasOwnProperty("height")) height = options.height;
+			}
 			
 			_field.embedFonts = true;
 			_field.wordWrap = _wordWrap;
@@ -62,14 +88,20 @@
 			_field.text = _text = text;
 			_width = width || _field.textWidth + 4;
 			_height = height || _field.textHeight + 4;
-			super(new BitmapData(_width, _height, true, 0));
-			update();
+			_source = new BitmapData(_width, _height, true, 0);
+			super(_source);
+			updateBuffer();
 			this.x = x;
 			this.y = y;
+			
+			if (options)
+			{
+				if (options.hasOwnProperty("color")) color = options.color;
+			}
 		}
 		
 		/** @private Updates the drawing buffer. */
-		override public function update():void 
+		override public function updateBuffer():void 
 		{
 			_field.setTextFormat(_form);
 			_field.width = _width;
@@ -102,8 +134,14 @@
 			_field.height = _height;
 			
 			_source.draw(_field);
-			
-			super.update();
+			super.updateBuffer();
+		}
+		
+		/** @private Centers the Text's originX/Y to its center. */
+		override public function centerOrigin():void 
+		{
+			originX = _width / 2;
+			originY = _height / 2;
 		}
 		
 		/**
@@ -114,7 +152,7 @@
 		{
 			if (_text == value) return;
 			_field.text = _text = value;
-			update();
+			updateBuffer();
 		}
 		
 		/**
@@ -125,7 +163,7 @@
 		{
 			if (_font == value) return;
 			_form.font = _font = value;
-			update();
+			updateBuffer();
 		}
 		
 		/**
@@ -136,7 +174,7 @@
 		{
 			if (_size == value) return;
 			_form.size = _size = value;
-			update();
+			updateBuffer();
 		}
 		
 		/**
@@ -148,41 +186,42 @@
 		{
 			if (_align == value) return;
 			_form.align = _align = value;
-			update();
+			updateBuffer();
 		}
 		
 		/**
-		 * Alignment ("left", "center" or "right").
-		 * Only relevant if text spans multiple lines.
+		 * Automatic word wrapping.
 		 */
 		public function get wordWrap():Boolean { return _wordWrap; }
 		public function set wordWrap(value:Boolean):void
 		{
 			if (_wordWrap == value) return;
 			_field.wordWrap = _wordWrap = value;
-			update();
+			updateBuffer();
 		}
 		
 		/**
 		 * Width of the text image.
 		 */
-		override public function get width():uint { return _width; }
+		override public function get width():uint { return _width * scaleX * scale; }
 		public function set width(value:uint):void
 		{
+			value /= scaleX * scale;
 			if (_width == value) return;
 			_width = value;
-			update();
+			updateBuffer();
 		}
 		
 		/**
 		 * Height of the text image.
 		 */
-		override public function get height():uint { return _height; }
+		override public function get height():uint { return _height * scaleY * scale; }
 		public function set height(value:uint):void
 		{
+			value /= scaleY * scale;
 			if (_height == value) return;
 			_height = value;
-			update();
+			updateBuffer();
 		}
 		
 		/**
