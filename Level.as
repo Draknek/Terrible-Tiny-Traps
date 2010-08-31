@@ -6,7 +6,6 @@ package
 	import net.flashpunk.utils.*;
 	
 	import flash.display.*;
-	import flash.events.*;
 	import flash.geom.*;
 	
 	public class Level extends World
@@ -21,6 +20,11 @@ package
 		public static const SPECIAL: uint = 0x654321;
 		
 		public var player: Player;
+		
+		public var started:Boolean = false;
+		
+		public var time:int = 0;
+		public var deaths:int = 0;
 		
 		public function Level()
 		{
@@ -43,6 +47,8 @@ package
 			add(player);
 			
 			var checkpointGrid: Grid = new Grid(level.width, level.height, 1, 1);
+			
+			var targetID:int = 0;
 			
 			for (var y: int = 0; y < level.height; y++) {
 				for (var x: int = 0; x < level.width; x++) {
@@ -69,7 +75,9 @@ package
 						add(new Spike(x, y));
 					}
 					else if (colour == 0xFF00FF) {
-						add(new Target(x - 2, y));
+						targetID++;
+						
+						add(new Target(x - 2, y, targetID));
 						
 						level.setPixel(x+1, y+1, 0xFFFFFF);
 						level.setPixel(x+2, y+2, 0xFFFFFF);
@@ -104,52 +112,133 @@ package
 		
 		public override function update (): void
 		{
-			if (! focused) { return; }
+			if (! started || ! Main.focused) { return; }
+			
+			if (classCount(Target) == 0) {
+				var congrats:MyTextField = new MyTextField(145, 80, "Congratulations", "center", 30);
+				FP.engine.addChild(congrats);
+				var mins:int = time / 600;
+				var secs:Number = (time % 600) / 10.0;
+				//var timeString:String = mins + ":" + (secs < 10 ? "0" : "") + secs;
+				var timeString:String = mins + " min " + secs + "s";
+				var stats:MyTextField = new MyTextField(145, 145, "You mastered the traps\nin " + timeString + "\nwith " + deaths + " deaths", "center", 20);
+				FP.engine.addChild(stats);
+				//clearSave();
+				started = false;
+				return;
+			}
 			
 			super.update();
+			
+			time++;
+			
+			if (time % 10 == 0) save(false);
 		}
 		
 		public override function render (): void
 		{
 			super.render();
 			
-			if (! focused) {
-				Draw.rect(0, 28, 150, 125, 0xFFFFFF, 0.8);
+			if (! started || ! Main.focused) {
+				Draw.rect(0, 28, 150, 125, 0xFFFFFF, 0.9);
 			}
 			
-			Main.clickText.visible = ! focused;
+			Main.clickText.visible = (started && ! Main.focused);
 		}
 		
-		public var focused: Boolean = false;
-		
-		public override function begin (): void
+		public function load ():void
 		{
-			FP.stage.addEventListener(MouseEvent.MOUSE_DOWN, mouseClick);
-		}
-		
-		public override function end (): void
-		{
-			FP.stage.removeEventListener(Event.ACTIVATE, focusGain);
-			FP.stage.removeEventListener(Event.DEACTIVATE, focusLost);
-		}
-		
-		private function mouseClick(e:Event):void
-		{
-			FP.stage.addEventListener(Event.ACTIVATE, focusGain);
-			FP.stage.addEventListener(Event.DEACTIVATE, focusLost);
-			FP.stage.removeEventListener(MouseEvent.MOUSE_DOWN, mouseClick);
-			focusGain();
-		}
-		
-		private function focusGain(e:Event = null):void
-		{
-			focused = true;
+			Data.load("tinytraps");
+			player.x = player.spawnX = Data.readInt("playerx", player.x);
+			player.y = player.spawnY = Data.readInt("playery", player.y);
 			
+			time = Data.readInt("time", 0);
+			deaths = Data.readInt("deaths", 0);
+			
+			var a:Array = [];
+			
+			getClass(Target, a);
+			
+			var tRemoved:int = 0;
+			
+			for each (var t:Target in a)
+			{
+				if (Data.readBool("gottarget"+t.id, false))
+				{
+					remove(t);
+					tRemoved++;
+				}
+			}
+			
+			started = true;
+			
+			updateMoving(tRemoved);
+			
+			updateLists();
 		}
 		
-		private function focusLost(e:Event = null):void
+		public static function clearSave():void
 		{
-			focused = false;
+			Data.load("");
+			Data.save("tinytraps");
+			
+			Level(FP.world).started = true;
+		}
+		
+		public function save (changeMoving:Boolean = true, minusOneTarget:Boolean = false):void
+		{
+			Data.writeInt("playerx", player.spawnX);
+			Data.writeInt("playery", player.spawnY);
+			Data.writeInt("time", time);
+			Data.writeInt("deaths", deaths);
+			Data.save("tinytraps");
+			
+			if (changeMoving) updateMoving(minusOneTarget ? 1 : 0);
+		}
+		
+		public function updateMoving (minusTargets:int = 0):void
+		{
+			const types:Array = ["solid", "spike"];
+			
+			var a:Array = [];
+			
+			var targetCount: int = classCount(Target) - minusTargets;
+			
+			for each (var type:String in types)
+			{
+				if (targetCount <= 11)
+				{
+					collideRectInto(type, 96, 86, 51, 37, a);
+				}
+				
+				if (targetCount <= 9)
+				{
+					collideRectInto(type, 10, 86, 20, 26, a);
+					collideRectInto(type, 49, 76, 21, 16, a);
+					collideRectInto(type, 76, 63, 13, 18, a);
+					collideRectInto(type, 116, 43, 31, 35, a);
+				}
+				
+				if (targetCount <= 6)
+				{
+					collideRectInto(type, 0, 73, 14, 10, a);
+					collideRectInto(type, 38, 44, 13, 16, a);
+					collideRectInto(type, 59, 56, 15, 18, a);
+					collideRectInto(type, 77, 42, 11, 15, a);
+				}
+				
+				if (targetCount <= 3)
+				{
+					collideRectInto(type, 19, 52, 18, 18, a);
+				}
+				
+				if (targetCount <= 1)
+				{
+					collideRectInto(type, 0, 0, 300, 250, a);
+				}
+			}
+			
+			for each (var e:Entity in a) e.active = true;
 		}
 		
 	}

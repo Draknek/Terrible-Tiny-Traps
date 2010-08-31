@@ -40,6 +40,8 @@ package
 			mask = new Pixelmask(bitmap);
 			
 			type = "spike";
+			
+			active = false;
 		}
 		
 		public override function update (): void
@@ -49,6 +51,7 @@ package
 			if (e) {
 				dx *= -1;
 				dy *= -1;
+				if (y < 40) update();
 			} else {
 				x += dx;
 				y += dy;

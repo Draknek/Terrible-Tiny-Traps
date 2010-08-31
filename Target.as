@@ -8,11 +8,13 @@ package
 	public class Target extends Entity
 	{
 		public var frame: int = 0;
+		public var id:int = 0;
 		
-		public function Target(_x: Number, _y: Number)
+		public function Target(_x: Number, _y: Number, _i:int)
 		{
 			x = _x;
 			y = _y;
+			id = _i;
 			
 			type = "target";
 			
@@ -41,6 +43,10 @@ package
 			if (p)
 			{
 				FP.world.remove(this);
+				
+				Data.writeBool("gottarget"+id, true);
+				Level(FP.world).save(true, true);
+				Mochi.trackEvent("gottarget", id);
 				
 				p.spawnX = p.x;
 				p.spawnY = p.y;

@@ -173,6 +173,8 @@ package
 		public function die () : void
 		{
 			deathCount = 15;
+			Level(FP.world).deaths++;
+			Level(FP.world).save(false);
 		}
 	}
 }

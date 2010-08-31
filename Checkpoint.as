@@ -22,8 +22,12 @@ package
 			var p: Player = collide("player", 0, 0) as Player;
 			
 			if (p) {
-				p.spawnX = p.x;
-				p.spawnY = p.y;
+				if (p.spawnX != p.x || p.spawnY != p.y)
+				{
+					p.spawnX = p.x;
+					p.spawnY = p.y;
+					Level(FP.world).save(false);
+				}
 			}
 		}
 	}
