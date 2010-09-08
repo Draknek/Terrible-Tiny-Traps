@@ -6,11 +6,16 @@ package
 	import flash.ui.*;
 	import flash.text.*;
 	import flash.events.*;
+	import flash.display.*;
 	
 	[SWF(width = "300", height = "250", backgroundColor="#FFFFFF")]
 	public class Main extends Engine
 	{
 		public static var clickText: TextField;
+		
+		public static var jump:SfxrSynth;
+		public static var death:SfxrSynth;
+		public static var target:SfxrSynth;
 		
 		public static var focused: Boolean = false;
 		
@@ -23,6 +28,26 @@ package
 			FP.world = new Level();
 			FP.screen.color = Level.BLANK;
 			FP.screen.scale = 2;
+			
+			jump = new SfxrSynth();
+			jump.setSettingsString("0,,0.19,,0.23,0.347,,0.252,,,,,,0.285,,,,,0.67,,,0.099,,0.15");
+			jump.cacheMutations(4);
+			
+			death = new SfxrSynth();
+			death.setSettingsString("3,,0.289,0.42,0.36,0.061,,,,,,,,,,0.491,0.222,-0.086,1,,,,,0.4");
+			death.cacheMutations(4);
+			
+			target = new SfxrSynth();
+			//target.setSettingsString("1,0.072,0.009,,0.51,0.374,0.034,0.139,,0.596,0.542,0.013,,0.047,0.015,,0.014,0.021,1,,0.025,,,0.3");
+			target.setSettingsString("2,0.072,0.05,,0.51,0.55,0.034,0.08,0.179,0.596,0.542,0.013,,0.047,0.015,,0.014,0.021,0.91,,0.025,,,0.3");
+			target.cacheMutations(4);
+		}
+		
+		public override function setStageProperties():void
+		{
+			super.setStageProperties();
+			stage.align = StageAlign.TOP;
+			stage.scaleMode = StageScaleMode.SHOW_ALL;
 		}
 		
 		public override function init (): void

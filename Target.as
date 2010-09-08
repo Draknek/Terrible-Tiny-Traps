@@ -50,6 +50,8 @@ package
 				
 				p.spawnX = p.x;
 				p.spawnY = p.y;
+				
+				Main.target.playCachedMutation();
 			}
 		}
 		

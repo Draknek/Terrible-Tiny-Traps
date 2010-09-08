@@ -101,6 +101,7 @@ package
 			
 			if (canJump && Input.check("JUMP")) {
 				jumpCount = 5;
+				Main.jump.playCachedMutation();
 			}
 			
 			var dy: int = (jumpCount > 0) ? -1 : 1;
@@ -172,6 +173,7 @@ package
 		
 		public function die () : void
 		{
+			Main.death.playCachedMutation();
 			deathCount = 15;
 			Level(FP.world).deaths++;
 			Level(FP.world).save(false);
