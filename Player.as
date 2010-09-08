@@ -71,8 +71,8 @@ package
 			
 			dx = 0;
 			
-			if (Input.check("L")) { dx -= 1; }
-			if (Input.check("R")) { dx += 1; }
+			if (Input.check("L") || Input.pressed("L")) { dx -= 1; }
+			if (Input.check("R") || Input.pressed("R")) { dx += 1; }
 			
 			canJump = false;
 			
@@ -99,7 +99,7 @@ package
 				/*else if (spritemap.frame == 0) { spritemap.frame = 6; }*/
 			}
 			
-			if (canJump && Input.check("JUMP")) {
+			if (canJump && (Input.check("JUMP") || Input.pressed("JUMP"))) {
 				jumpCount = 5;
 				Main.jump.playCachedMutation();
 			}

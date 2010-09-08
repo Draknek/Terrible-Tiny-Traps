@@ -55,6 +55,8 @@ package
 			//sitelock("draknek.org");
 			
 			FP.stage.addEventListener(MouseEvent.MOUSE_DOWN, mouseClick);
+			FP.stage.addEventListener(Event.ACTIVATE, focusGain);
+			FP.stage.addEventListener(Event.DEACTIVATE, focusLost);
 			
 			FP.screen.refresh();
 			
@@ -146,16 +148,12 @@ package
 		
 		private function mouseClick(e:Event):void
 		{
-			FP.stage.addEventListener(Event.ACTIVATE, focusGain);
-			FP.stage.addEventListener(Event.DEACTIVATE, focusLost);
-			FP.stage.removeEventListener(MouseEvent.MOUSE_DOWN, mouseClick);
 			focusGain();
 		}
 		
 		private function focusGain(e:Event = null):void
 		{
 			focused = true;
-			
 		}
 		
 		private function focusLost(e:Event = null):void
