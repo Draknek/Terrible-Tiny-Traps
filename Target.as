@@ -51,7 +51,7 @@ package
 				p.spawnX = p.x;
 				p.spawnY = p.y;
 				
-				Main.target.playCachedMutation();
+				Audio.play("target");
 			}
 		}
 		
