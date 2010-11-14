@@ -6,6 +6,7 @@ package
 	import net.flashpunk.utils.*;
 	
 	import flash.display.*;
+	import flash.events.*;
 	import flash.geom.*;
 	
 	public class Level extends World
@@ -28,7 +29,7 @@ package
 		
 		public function Level()
 		{
-			var level: BitmapData = FP.getBitmap(levelGfx);
+			var level: BitmapData = FP.getBitmap(levelGfx).clone();
 			
 			var solid: Entity = new Entity();
 			
@@ -115,16 +116,60 @@ package
 			if (! started || ! Main.focused) { return; }
 			
 			if (classCount(Target) == 0) {
-				var congrats:MyTextField = new MyTextField(145, 80, "Congratulations", "center", 30);
+				var congrats:MyTextField = new MyTextField(145, 70, "Congratulations", "center", 30);
 				FP.engine.addChild(congrats);
 				var mins:int = time / 600;
 				var secs:Number = (time % 600) / 10.0;
 				//var timeString:String = mins + ":" + (secs < 10 ? "0" : "") + secs;
 				var timeString:String = mins + " min " + secs + "s";
-				var stats:MyTextField = new MyTextField(145, 145, "You mastered the traps\nin " + timeString + "\nwith " + deaths + " deaths", "center", 20);
+				var stats:MyTextField = new MyTextField(145, 120, "You mastered the traps\nin " + timeString + "\nwith " + deaths + " deaths", "center", 20);
 				FP.engine.addChild(stats);
-				//clearSave();
 				started = false;
+				
+				var backButton:Button = new Button("Back", 20);
+				backButton.x = 150 - backButton.width*0.5;
+				backButton.y = 200;
+				
+				var bestTime:int = Data.readInt("besttime", -1);
+				var bestDeaths:int = Data.readInt("bestdeaths", -1);
+				
+				var isNewRecord:Boolean = false;
+				
+				if (bestTime == -1 || bestTime > time) {
+					Data.writeInt("besttime", time);
+					isNewRecord = true;
+				}
+				
+				if (bestDeaths == -1 || bestDeaths > deaths) {
+					Data.writeInt("bestdeaths", deaths);
+					isNewRecord = true;
+				}
+				
+				clearSave();
+				
+				var newRecord:MyTextField;
+				
+				if (isNewRecord) {
+					newRecord = new MyTextField(150, 172, "New record!", "center", 15);
+					newRecord.textColor = PLAYER;
+					FP.engine.addChild(newRecord);
+					
+					congrats.y -= 5;
+					stats.y -= 15;
+				}
+				
+				backButton.addEventListener(MouseEvent.CLICK, function ():void {
+					FP.engine.removeChild(congrats);
+					FP.engine.removeChild(stats);
+					FP.engine.removeChild(backButton);
+					if (newRecord) FP.engine.removeChild(newRecord);
+					FP.world = new Level();
+					Main(FP.engine).showButtons();
+					FP.stage.focus = FP.stage;
+				});
+			
+				FP.engine.addChild(backButton);
+				
 				return;
 			}
 			
@@ -179,10 +224,11 @@ package
 		
 		public static function clearSave():void
 		{
-			Data.load("");
+			Data.writeInt("playerx", 0);
+			Data.writeInt("playery", 0);
+			Data.writeInt("time", 0);
+			Data.writeInt("deaths", 0);
 			Data.save("tinytraps");
-			
-			Level(FP.world).started = true;
 		}
 		
 		public function save (changeMoving:Boolean = true, minusOneTarget:Boolean = false):void
