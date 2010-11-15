@@ -131,7 +131,7 @@
 		{
 			if (!file) file = DEFAULT_FILE;
 			if (id) _shared = SharedObject.getLocal(PREFIX + "/" + id + "/" + file, "/");
-			else _shared = SharedObject.getLocal(PREFIX + "/" + file);
+			else _shared = SharedObject.getLocal(PREFIX + "/" + file, "/");
 			return _shared.data;
 		}
 		

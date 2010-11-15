@@ -117,13 +117,15 @@ package
 			
 			if (classCount(Target) == 0) {
 				var congrats:MyTextField = new MyTextField(145, 70, "Congratulations", "center", 30);
-				FP.engine.addChild(congrats);
 				var mins:int = time / 600;
 				var secs:Number = (time % 600) / 10.0;
 				//var timeString:String = mins + ":" + (secs < 10 ? "0" : "") + secs;
 				var timeString:String = mins + " min " + secs + "s";
-				var stats:MyTextField = new MyTextField(145, 120, "You mastered the traps\nin " + timeString + "\nwith " + deaths + " deaths", "center", 20);
-				FP.engine.addChild(stats);
+				var deathString:String = "with " + deaths + " deaths";
+				if (deaths == 1) { deathString = "with only one death!" }
+				else if (deaths == 0) { deathString = "without dying!" }
+				var stats:MyTextField = new MyTextField(145, 120, "You mastered the traps\nin " + timeString + "\n" + deathString, "center", 20);
+				
 				started = false;
 				
 				var backButton:Button = new Button("Back", 20);
@@ -147,28 +149,51 @@ package
 				
 				clearSave();
 				
+				var b:Array = [congrats, stats];
+				
 				var newRecord:MyTextField;
 				
 				if (isNewRecord) {
-					newRecord = new MyTextField(150, 172, "New record!", "center", 15);
+					newRecord = new MyTextField(150, 0, "New record!", "center", 15);
 					newRecord.textColor = PLAYER;
-					FP.engine.addChild(newRecord);
+				}
+				
+				if (deathString.substr(-1) != "!") deathString += "!";
+				
+				var tweetString:String = "I just mastered the Terrible Tiny Traps in " + timeString + " " + deathString + " Take the challenge: http://bit.ly/cyf7Cu";
+				
+				var tweetButton:TweetButton = new TweetButton(tweetString);
+				
+				if (newRecord) {
+					var s:Sprite = new Sprite;
+					var w:int = newRecord.width + tweetButton.width + 6;
+					var h:int = Math.max(newRecord.height, tweetButton.height);
 					
-					congrats.y -= 5;
-					stats.y -= 15;
+					//s.height = h;
+					
+					newRecord.x = 150 - int(w * 0.5);
+					tweetButton.x = newRecord.x + newRecord.width + 6;
+					
+					s.addChild(newRecord);
+					s.addChild(tweetButton);
+					b.push(s);
+				} else {
+					tweetButton.x = 150 - tweetButton.width*0.5;
+					b.push(tweetButton);
 				}
 				
 				backButton.addEventListener(MouseEvent.CLICK, function ():void {
-					FP.engine.removeChild(congrats);
-					FP.engine.removeChild(stats);
-					FP.engine.removeChild(backButton);
-					if (newRecord) FP.engine.removeChild(newRecord);
+					for each (var o:DisplayObject in b) {
+						if (o.parent) FP.engine.removeChild(o);
+					}
 					FP.world = new Level();
 					Main(FP.engine).showButtons();
 					FP.stage.focus = FP.stage;
 				});
 			
-				FP.engine.addChild(backButton);
+				b.push(backButton);
+				
+				Main.addElements(b);
 				
 				return;
 			}

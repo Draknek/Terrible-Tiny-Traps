@@ -128,6 +128,11 @@ package
 				b.push(stats);
 			}
 			
+			addElements(b);
+		}
+		
+		public static function addElements(b:Array):void
+		{
 			var h:Number = 0;
 			
 			for each (var o:DisplayObject in b) {
@@ -140,8 +145,8 @@ package
 			var y:Number = 54 + s;
 			
 			for each (o in b) {
-				o.y = y;
-				addChild(o);
+				o.y = int(y);
+				FP.engine.addChild(o);
 				y += s + o.height;
 			}
 		}
