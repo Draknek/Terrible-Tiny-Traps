@@ -1,6 +1,7 @@
 ﻿package net.flashpunk.utils
 {
 	import flash.net.SharedObject;
+	import net.flashpunk.FP;
 	
 	/**
 	 * Static helper class used for saving and loading data from stored cookies.
@@ -129,9 +130,15 @@
 		/** @private Loads the data file, or return it if you're loading the same one. */
 		private static function loadData(file:String):Object
 		{
+			var tmp:String = "/";
+			
+			if (FP.stage.loaderInfo.url == "http://www.draknek.org/games/tinytraps/final.swf") {
+				tmp = null;
+			}
+			
 			if (!file) file = DEFAULT_FILE;
 			if (id) _shared = SharedObject.getLocal(PREFIX + "/" + id + "/" + file, "/");
-			else _shared = SharedObject.getLocal(PREFIX + "/" + file, "/");
+			else _shared = SharedObject.getLocal(PREFIX + "/" + file, tmp);
 			return _shared.data;
 		}
 		

@@ -253,6 +253,11 @@ package
 			Data.writeInt("playery", 0);
 			Data.writeInt("time", 0);
 			Data.writeInt("deaths", 0);
+			
+			for (var i:int = 0; i < 13; i++) {
+				Data.writeBool("gottarget"+i, false);
+			}
+			
 			Data.save("tinytraps");
 		}
 		
