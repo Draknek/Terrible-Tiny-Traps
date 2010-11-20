@@ -158,10 +158,10 @@ package
 			if (bestTime >= 0) {
 				b.push(noDeathButton);
 				
-				stats.text = "Best time: " + mins + ":" + (secs < 10 ? "0" : "") + secs + "\nLeast deaths: " + bestDeaths;
-				mins = bestRealismTime / 600;
-				secs = (bestRealismTime % 600) / 10.0;
+				mins = bestTime / 600;
+				secs = (bestTime % 600) / 10.0;
 				
+				stats.text = "Best time: " + mins + ":" + (secs < 10 ? "0" : "") + secs + "\nLeast deaths: " + bestDeaths;
 				var bestRealismTime:int = Data.readInt("bestrealismtime", -1);
 				var bestRealismTargets:int = Data.readInt("bestrealismtargets", 0);
 				
