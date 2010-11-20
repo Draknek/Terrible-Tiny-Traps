@@ -57,8 +57,12 @@ package
 				deathCount--;
 				
 				if (deathCount == 8) {
-					x = spawnX;
-					y = spawnY;
+					if (Main.realism) {
+						Level(FP.world).realismDeath();
+					} else {
+						x = spawnX;
+						y = spawnY;
+					}
 				}
 				
 				/*FP.camera.x = x - 80;

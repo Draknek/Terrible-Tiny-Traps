@@ -44,7 +44,10 @@ package
 			{
 				FP.world.remove(this);
 				
-				Data.writeBool("gottarget"+id, true);
+				if (! Main.realism) {
+					Data.writeBool("gottarget"+id, true);
+				}
+				
 				Level(FP.world).save(true, true);
 				Mochi.trackEvent("gottarget", id);
 				

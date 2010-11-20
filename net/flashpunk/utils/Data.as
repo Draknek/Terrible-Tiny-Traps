@@ -132,7 +132,8 @@
 		{
 			var tmp:String = "/";
 			
-			if (FP.stage.loaderInfo.url == "http://www.draknek.org/games/tinytraps/final.swf") {
+			if (FP.stage.loaderInfo.url == "http://www.draknek.org/games/tinytraps/final.swf"
+				|| FP.stage.loaderInfo.url == "http://redditads.s3.amazonaws.com/tinytraps.swf") {
 				tmp = null;
 			}
 			

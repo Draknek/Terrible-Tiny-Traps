@@ -15,11 +15,11 @@ package
 		
 		public static var focused: Boolean = false;
 		
+		public static var realism:Boolean = false;
+		
 		public function Main()
 		{
 			super(150, 125, 10, true);
-			
-			Mochi.connect(this, "8a95e5563e4d35b5");
 			
 			Audio.init(this);
 			
@@ -83,6 +83,7 @@ package
 			stats = new MyTextField(150, 50, "", "center", 15);
 			
 			continueButton.addEventListener(MouseEvent.CLICK, function ():void {
+				Main.realism = false;
 				removeChild(continueButton);
 				removeChild(newGameButton);
 				if (stats.parent) removeChild(stats);
@@ -92,11 +93,22 @@ package
 			});
 			
 			newGameButton.addEventListener(MouseEvent.CLICK, function ():void {
+				Main.realism = false;
 				if (continueButton.parent) removeChild(continueButton);
 				if (stats.parent) removeChild(stats);
 				if (noDeathButton.parent) removeChild(noDeathButton);
 				removeChild(newGameButton);
 				Level.clearSave();
+				Level(FP.world).started = true;
+				FP.stage.focus = FP.stage;
+			});
+			
+			noDeathButton.addEventListener(MouseEvent.CLICK, function ():void {
+				Main.realism = true;
+				if (continueButton.parent) removeChild(continueButton);
+				if (stats.parent) removeChild(stats);
+				if (noDeathButton.parent) removeChild(noDeathButton);
+				removeChild(newGameButton);
 				Level(FP.world).started = true;
 				FP.stage.focus = FP.stage;
 			});
@@ -118,12 +130,24 @@ package
 			var bestDeaths:int = Data.readInt("bestdeaths", -1);
 			
 			if (bestTime >= 0) {
-				//b.push(noDeathButton);
+				b.push(noDeathButton);
 				
 				var mins:int = bestTime / 600;
 				var secs:Number = (bestTime % 600) / 10.0;
 				
-				stats.text = "Best time: " + mins + ":" + secs + "\nLeast deaths: " + bestDeaths;
+				stats.text = "Best time: " + mins + ":" + (secs < 10 ? "0" : "") + secs + "\nLeast deaths: " + bestDeaths;
+				
+				var bestRealismTime:int = Data.readInt("bestrealismtime", -1);
+				var bestRealismTargets:int = Data.readInt("bestrealismtargets", 0);
+				
+				if (bestRealismTime > 0) {
+					mins = bestRealismTime / 600;
+					secs = (bestRealismTime % 600) / 10.0;
+				
+					stats.text += "\nRealism mode: " + mins + ":" + (secs < 10 ? "0" : "") + secs;
+				} else if (bestRealismTargets > 0) {
+					stats.text += "\nRealism mode: " + bestRealismTargets + "/12";
+				}
 			
 				b.push(stats);
 			}
@@ -173,8 +197,15 @@ package
 			return false;
 		}
 		
+		private static var mochiConnected:Boolean = false;
+		
 		private function mouseClick(e:Event):void
 		{
+			if (! mochiConnected) {
+				Mochi.connect(this, "8a95e5563e4d35b5");
+				mochiConnected = true;
+			}
+			
 			focusGain();
 		}
 		

@@ -27,8 +27,13 @@ package
 		public var time:int = 0;
 		public var deaths:int = 0;
 		
+		public var escapeHandler:Function;
+		public var actionHandler:Function;
+		
 		public function Level()
 		{
+			Input.define("MENU_ACTION", Key.SPACE, Key.Z, Key.X, Key.C, Key.ENTER);
+			
 			var level: BitmapData = FP.getBitmap(levelGfx).clone();
 			
 			var solid: Entity = new Entity();
@@ -113,87 +118,32 @@ package
 		
 		public override function update (): void
 		{
+			if (actionHandler != null && Input.pressed("MENU_ACTION")) {
+				actionHandler();
+				actionHandler = null;
+				escapeHandler = null;
+				return;
+			}
+			
+			if (escapeHandler != null && Input.pressed(Key.ESCAPE)) {
+				escapeHandler();
+				escapeHandler = null;
+				actionHandler = null;
+				return;
+			}
+			
 			if (! started || ! Main.focused) { return; }
 			
-			if (classCount(Target) == 0) {
-				var congrats:MyTextField = new MyTextField(145, 70, "Congratulations", "center", 30);
-				var mins:int = time / 600;
-				var secs:Number = (time % 600) / 10.0;
-				//var timeString:String = mins + ":" + (secs < 10 ? "0" : "") + secs;
-				var timeString:String = mins + " min " + secs + "s";
-				var deathString:String = "with " + deaths + " deaths";
-				if (deaths == 1) { deathString = "with only one death!" }
-				else if (deaths == 0) { deathString = "without dying!" }
-				var stats:MyTextField = new MyTextField(145, 120, "You mastered the traps\nin " + timeString + "\n" + deathString, "center", 20);
-				
-				started = false;
-				
-				var backButton:Button = new Button("Back", 20);
-				backButton.x = 150 - backButton.width*0.5;
-				backButton.y = 200;
-				
-				var bestTime:int = Data.readInt("besttime", -1);
-				var bestDeaths:int = Data.readInt("bestdeaths", -1);
-				
-				var isNewRecord:Boolean = false;
-				
-				if (bestTime == -1 || bestTime > time) {
-					Data.writeInt("besttime", time);
-					isNewRecord = true;
-				}
-				
-				if (bestDeaths == -1 || bestDeaths > deaths) {
-					Data.writeInt("bestdeaths", deaths);
-					isNewRecord = true;
-				}
-				
-				clearSave();
-				
-				var b:Array = [congrats, stats];
-				
-				var newRecord:MyTextField;
-				
-				if (isNewRecord) {
-					newRecord = new MyTextField(150, 0, "New record!", "center", 15);
-					newRecord.textColor = PLAYER;
-				}
-				
-				if (deathString.substr(-1) != "!") deathString += "!";
-				
-				var tweetString:String = "I just mastered the Terrible Tiny Traps in " + timeString + " " + deathString + " Take the challenge: http://bit.ly/cyf7Cu";
-				
-				var tweetButton:TweetButton = new TweetButton(tweetString);
-				
-				if (newRecord) {
-					var s:Sprite = new Sprite;
-					var w:int = newRecord.width + tweetButton.width + 6;
-					var h:int = Math.max(newRecord.height, tweetButton.height);
-					
-					//s.height = h;
-					
-					newRecord.x = 150 - int(w * 0.5);
-					tweetButton.x = newRecord.x + newRecord.width + 6;
-					
-					s.addChild(newRecord);
-					s.addChild(tweetButton);
-					b.push(s);
-				} else {
-					tweetButton.x = 150 - tweetButton.width*0.5;
-					b.push(tweetButton);
-				}
-				
-				backButton.addEventListener(MouseEvent.CLICK, function ():void {
-					for each (var o:DisplayObject in b) {
-						if (o.parent) FP.engine.removeChild(o);
-					}
-					FP.world = new Level();
-					Main(FP.engine).showButtons();
-					FP.stage.focus = FP.stage;
-				});
+			if (Input.pressed(Key.ESCAPE)) {
+				save(false);
+				FP.world = new Level();
+				Main(FP.engine).showButtons();
+				FP.stage.focus = FP.stage;
+				return;
+			}
 			
-				b.push(backButton);
-				
-				Main.addElements(b);
+			if (classCount(Target) == 0) {
+				completed();
 				
 				return;
 			}
@@ -263,11 +213,13 @@ package
 		
 		public function save (changeMoving:Boolean = true, minusOneTarget:Boolean = false):void
 		{
-			Data.writeInt("playerx", player.spawnX);
-			Data.writeInt("playery", player.spawnY);
-			Data.writeInt("time", time);
-			Data.writeInt("deaths", deaths);
-			Data.save("tinytraps");
+			if (! Main.realism) {
+				Data.writeInt("playerx", player.spawnX);
+				Data.writeInt("playery", player.spawnY);
+				Data.writeInt("time", time);
+				Data.writeInt("deaths", deaths);
+				Data.save("tinytraps");
+			}
 			
 			if (changeMoving) updateMoving(minusOneTarget ? 1 : 0);
 		}
@@ -315,6 +267,175 @@ package
 			}
 			
 			for each (var e:Entity in a) e.active = true;
+		}
+		
+		public function completed ():void
+		{
+			var congrats:MyTextField = new MyTextField(145, 70, "Congratulations", "center", 30);
+			var mins:int = time / 600;
+			var secs:Number = (time % 600) / 10.0;
+			//var timeString:String = mins + ":" + (secs < 10 ? "0" : "") + secs;
+			var timeString:String = mins + " min " + secs + "s";
+			var deathString:String = "with " + deaths + " deaths";
+			if (deaths == 1) { deathString = "with only one death!" }
+			else if (deaths == 0) { deathString = "without dying!" }
+			var stats:MyTextField = new MyTextField(145, 120, "You mastered the traps\nin " + timeString + "\n" + deathString, "center", 20);
+			
+			started = false;
+			
+			var backButton:Button = new Button("Back", 20);
+			backButton.x = 150 - backButton.width*0.5;
+			backButton.y = 200;
+			
+			var bestTime:int = Data.readInt("besttime", -1);
+			var bestDeaths:int = Data.readInt("bestdeaths", -1);
+			var bestRealismTime:int = Data.readInt("bestrealismtime", -1);
+			
+			var isNewRecord:Boolean = false;
+			
+			if (bestTime == -1 || bestTime > time) {
+				Data.writeInt("besttime", time);
+				isNewRecord = true;
+			}
+			
+			if (bestDeaths == -1 || bestDeaths > deaths) {
+				Data.writeInt("bestdeaths", deaths);
+				isNewRecord = true;
+			}
+			
+			if (bestRealismTime == -1 || bestRealismTime > time) {
+				Data.writeInt("bestrealismtime", time);
+				isNewRecord = true;
+			}
+			
+			clearSave();
+			
+			var b:Array = [congrats, stats];
+			
+			var newRecord:MyTextField;
+			
+			if (isNewRecord) {
+				Data.save("tinytraps");
+				
+				newRecord = new MyTextField(150, 0, "New record!", "center", 15);
+				newRecord.textColor = PLAYER;
+			}
+			
+			if (deathString.substr(-1) != "!") deathString += "!";
+			
+			var tweetString:String = "I just mastered the Terrible Tiny Traps in " + timeString + " " + deathString + " Take the challenge: http://bit.ly/cyf7Cu";
+			
+			var tweetButton:TweetButton = new TweetButton(tweetString);
+			
+			if (newRecord) {
+				var s:Sprite = new Sprite;
+				var w:int = newRecord.width + tweetButton.width + 6;
+				var h:int = Math.max(newRecord.height, tweetButton.height);
+				
+				//s.height = h;
+				
+				newRecord.x = 150 - int(w * 0.5);
+				tweetButton.x = newRecord.x + newRecord.width + 6;
+				
+				s.addChild(newRecord);
+				s.addChild(tweetButton);
+				b.push(s);
+			} else {
+				tweetButton.x = 150 - tweetButton.width*0.5;
+				b.push(tweetButton);
+			}
+			
+			escapeHandler = function ():void {
+				for each (var o:DisplayObject in b) {
+					if (o.parent) FP.engine.removeChild(o);
+				}
+				FP.world = new Level();
+				Main(FP.engine).showButtons();
+				FP.stage.focus = FP.stage;
+			};
+			actionHandler = escapeHandler;
+			
+			backButton.addEventListener(MouseEvent.CLICK, escapeHandler);
+		
+			b.push(backButton);
+			
+			Main.addElements(b);
+		}
+		
+		public function realismDeath ():void
+		{
+			var gameOver:MyTextField = new MyTextField(150, 70, "Failure", "center", 30);
+			var mins:int = time / 600;
+			var secs:Number = (time % 600) / 10.0;
+			//var timeString:String = mins + ":" + (secs < 10 ? "0" : "") + secs;
+			var timeString:String = mins + " min " + secs + "s";
+			var targetCount:int = (12 - classCount(Target));
+			var targetString:String = targetCount + " checkpoints";
+			if (targetCount == 0) targetString = "no checkpoints";
+			else if (targetCount == 1) targetString = "one checkpoint";
+			
+			var stats:MyTextField = new MyTextField(150, 120, "You reached\n" + targetString + "\n" + "in " + timeString + "\n before dying", "center", 20);
+			started = false;
+			
+			var backButton:Button = new Button("Back", 20);
+			var retryButton:Button = new Button("Retry", 20);
+			
+			var buttons:Sprite = new Sprite;
+			
+			buttons.addChild(backButton);
+			buttons.addChild(retryButton);
+			
+			backButton.x = 150 - int(backButton.width + retryButton.width + 12) * 0.5;
+			retryButton.x = backButton.x + backButton.width + 12;
+			
+			var b:Array = [gameOver, stats];
+			
+			var bestTargets:int = Data.readInt("bestrealismtargets", 0);
+			
+			var isNewRecord:Boolean = false;
+			
+			if (targetCount > bestTargets) {
+				Data.writeInt("bestrealismtargets", targetCount);
+				isNewRecord = true;
+			}
+			
+			if (isNewRecord) {
+				Data.save("tinytraps");
+				
+				var newRecord:MyTextField = new MyTextField(150, 0, "New record!", "center", 15);
+				newRecord.textColor = PLAYER;
+				
+				newRecord.x = 150 - newRecord.width*0.5;
+				
+				b.push(newRecord);
+			}
+			
+			escapeHandler = function ():void {
+				for each (var o:DisplayObject in b) {
+					if (o.parent) FP.engine.removeChild(o);
+				}
+				FP.world = new Level();
+				Main(FP.engine).showButtons();
+				FP.stage.focus = FP.stage;
+			};
+			
+			actionHandler = function ():void {
+				for each (var o:DisplayObject in b) {
+					if (o.parent) FP.engine.removeChild(o);
+				}
+				Main.realism = true;
+				var level:Level = new Level;
+				FP.world = level;
+				level.started = true;
+				FP.stage.focus = FP.stage;
+			};
+			
+			backButton.addEventListener(MouseEvent.CLICK, escapeHandler);
+			retryButton.addEventListener(MouseEvent.CLICK, escapeHandler);
+			
+			b.push(buttons);
+			
+			Main.addElements(b);
 		}
 		
 	}
