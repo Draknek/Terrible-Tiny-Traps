@@ -39,6 +39,7 @@ package
 		public var continueButton:Button;
 		public var noDeathButton:Button;
 		public var stats:MyTextField;
+		public var continueStats:MyTextField;
 		
 		public override function init (): void
 		{
@@ -81,11 +82,14 @@ package
 			noDeathButton.x = 150 - noDeathButton.width*0.5;
 			
 			stats = new MyTextField(150, 50, "", "center", 15);
+			continueStats = new MyTextField(150, 50, "", "left", 10);
+			continueStats.x = continueButton.x + continueButton.width + 5;
 			
 			continueButton.addEventListener(MouseEvent.CLICK, function ():void {
 				Main.realism = false;
 				removeChild(continueButton);
 				removeChild(newGameButton);
+				if (continueStats.parent) removeChild(continueStats);
 				if (stats.parent) removeChild(stats);
 				if (noDeathButton.parent) removeChild(noDeathButton);
 				Level(FP.world).load();
@@ -96,6 +100,7 @@ package
 			newGameButton.addEventListener(MouseEvent.CLICK, function ():void {
 				Main.realism = false;
 				if (continueButton.parent) removeChild(continueButton);
+				if (continueStats.parent) removeChild(continueStats);
 				if (stats.parent) removeChild(stats);
 				if (noDeathButton.parent) removeChild(noDeathButton);
 				removeChild(newGameButton);
@@ -108,6 +113,7 @@ package
 			noDeathButton.addEventListener(MouseEvent.CLICK, function ():void {
 				Main.realism = true;
 				if (continueButton.parent) removeChild(continueButton);
+				if (continueStats.parent) removeChild(continueStats);
 				if (stats.parent) removeChild(stats);
 				if (noDeathButton.parent) removeChild(noDeathButton);
 				removeChild(newGameButton);
@@ -125,6 +131,23 @@ package
 			
 			if (Data.readInt("time", 0)) {
 				b.push(continueButton);
+				
+				var targetCount:int = 0;
+				for (var i:int = 0; i <= 12; i++) {
+					if (Data.readBool("gottarget"+i)) targetCount++;
+				}
+				
+				var time:int = Data.readInt("time", 0);
+				var mins:int = time / 600;
+				var secs:Number = (time % 600) / 10.0;
+				
+				var deaths:int = Data.readInt("deaths", 0);
+				var deathText:String = deaths + " deaths";
+				if (deaths == 1) deathText = "1 death";
+				
+				continueStats.text = targetCount + "/12\n" + mins + ":" + (secs < 10 ? "0" : "") + secs + "\n" + deathText;
+				
+				addChild(continueStats);
 			}
 			
 			b.push(newGameButton);
@@ -135,10 +158,9 @@ package
 			if (bestTime >= 0) {
 				b.push(noDeathButton);
 				
-				var mins:int = bestTime / 600;
-				var secs:Number = (bestTime % 600) / 10.0;
-				
 				stats.text = "Best time: " + mins + ":" + (secs < 10 ? "0" : "") + secs + "\nLeast deaths: " + bestDeaths;
+				mins = bestRealismTime / 600;
+				secs = (bestRealismTime % 600) / 10.0;
 				
 				var bestRealismTime:int = Data.readInt("bestrealismtime", -1);
 				var bestRealismTargets:int = Data.readInt("bestrealismtargets", 0);
@@ -156,6 +178,10 @@ package
 			}
 			
 			addElements(b);
+			
+			if (continueStats.parent) {
+				continueStats.y = continueButton.y + (continueButton.height - continueStats.height)*0.5;
+			}
 		}
 		
 		public static function addElements(b:Array):void
