@@ -289,7 +289,6 @@ package
 			
 			var bestTime:int = Data.readInt("besttime", -1);
 			var bestDeaths:int = Data.readInt("bestdeaths", -1);
-			var bestRealismTime:int = Data.readInt("bestrealismtime", -1);
 			
 			var isNewRecord:Boolean = false;
 			
@@ -303,9 +302,12 @@ package
 				isNewRecord = true;
 			}
 			
-			if (bestRealismTime == -1 || bestRealismTime > time) {
-				Data.writeInt("bestrealismtime", time);
-				isNewRecord = true;
+			if (Main.realism) {
+				var bestRealismTime:int = Data.readInt("bestrealismtime", -1);
+				if (bestRealismTime == -1 || bestRealismTime > time) {
+					Data.writeInt("bestrealismtime", time);
+					isNewRecord = true;
+				}
 			}
 			
 			clearSave();
