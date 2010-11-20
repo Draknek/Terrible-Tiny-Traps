@@ -8,6 +8,7 @@ package
 	import flash.display.*;
 	import flash.events.*;
 	import flash.geom.*;
+	import flash.ui.Mouse;
 	
 	public class Level extends World
 	{
@@ -139,6 +140,7 @@ package
 				FP.world = new Level();
 				Main(FP.engine).showButtons();
 				FP.stage.focus = FP.stage;
+				Mouse.show();
 				return;
 			}
 			
@@ -271,6 +273,8 @@ package
 		
 		public function completed ():void
 		{
+			Mouse.show();
+			
 			var congrats:MyTextField = new MyTextField(145, 70, "Congratulations", "center", 30);
 			var mins:int = time / 600;
 			var secs:Number = (time % 600) / 10.0;
@@ -366,6 +370,8 @@ package
 		
 		public function realismDeath ():void
 		{
+			Mouse.show();
+			
 			var gameOver:MyTextField = new MyTextField(150, 70, "Failure", "center", 30);
 			var mins:int = time / 600;
 			var secs:Number = (time % 600) / 10.0;
@@ -430,6 +436,7 @@ package
 				FP.world = level;
 				level.started = true;
 				FP.stage.focus = FP.stage;
+				Mouse.hide();
 			};
 			
 			backButton.addEventListener(MouseEvent.CLICK, escapeHandler);

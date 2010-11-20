@@ -90,6 +90,7 @@ package
 				if (noDeathButton.parent) removeChild(noDeathButton);
 				Level(FP.world).load();
 				FP.stage.focus = FP.stage;
+				Mouse.hide();
 			});
 			
 			newGameButton.addEventListener(MouseEvent.CLICK, function ():void {
@@ -101,6 +102,7 @@ package
 				Level.clearSave();
 				Level(FP.world).started = true;
 				FP.stage.focus = FP.stage;
+				Mouse.hide();
 			});
 			
 			noDeathButton.addEventListener(MouseEvent.CLICK, function ():void {
@@ -111,6 +113,7 @@ package
 				removeChild(newGameButton);
 				Level(FP.world).started = true;
 				FP.stage.focus = FP.stage;
+				Mouse.hide();
 			});
 			
 			showButtons();
@@ -212,11 +215,15 @@ package
 		private function focusGain(e:Event = null):void
 		{
 			focused = true;
+			if (FP.world is Level && Level(FP.world).started) {
+				Mouse.hide();
+			}
 		}
 		
 		private function focusLost(e:Event = null):void
 		{
 			focused = false;
+			Mouse.show();
 		}
 		
 	}
