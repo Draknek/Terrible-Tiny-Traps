@@ -42,14 +42,14 @@ package
 			
 			if (p)
 			{
-				FP.world.remove(this);
-				
 				if (! Main.realism) {
 					Data.writeBool("gottarget"+id, true);
 				}
 				
 				Level(FP.world).save(true, true);
-				Mochi.trackEvent("gottarget", id);
+				Logger.checkpoint(id, 13 - FP.world.classCount(Target));
+				
+				FP.world.remove(this);
 				
 				p.spawnX = p.x;
 				p.spawnY = p.y;

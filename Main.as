@@ -95,6 +95,7 @@ package
 				Level(FP.world).load();
 				FP.stage.focus = FP.stage;
 				Mouse.hide();
+				Logger.startPlay("", "Continue");
 			});
 			
 			newGameButton.addEventListener(MouseEvent.CLICK, function ():void {
@@ -108,6 +109,7 @@ package
 				Level(FP.world).started = true;
 				FP.stage.focus = FP.stage;
 				Mouse.hide();
+				Logger.startPlay("", "New game");
 			});
 			
 			noDeathButton.addEventListener(MouseEvent.CLICK, function ():void {
@@ -120,6 +122,7 @@ package
 				Level(FP.world).started = true;
 				FP.stage.focus = FP.stage;
 				Mouse.hide();
+				Logger.startPlay("Realism mode", "");
 			});
 			
 			showButtons();
@@ -231,8 +234,9 @@ package
 		private function mouseClick(e:Event):void
 		{
 			if (! mochiConnected) {
-				Mochi.connect(this, "8a95e5563e4d35b5");
 				mochiConnected = true;
+				Logger.connect(this);
+				trace("Yo");
 			}
 			
 			focusGain();
@@ -243,6 +247,7 @@ package
 			focused = true;
 			if (FP.world is Level && Level(FP.world).started) {
 				Mouse.hide();
+				//Logger.startPlay(Main.realism ? "Realism mode" : "", "gained focus");
 			}
 		}
 		
@@ -250,6 +255,10 @@ package
 		{
 			focused = false;
 			Mouse.show();
+			
+			if (FP.world is Level && Level(FP.world).started) {
+				//Logger.endPlay("lost focus");
+			}
 		}
 		
 	}

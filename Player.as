@@ -177,6 +177,7 @@ package
 		
 		public function die () : void
 		{
+			Logger.died();
 			Audio.play("death");
 			deathCount = 15;
 			Level(FP.world).deaths++;

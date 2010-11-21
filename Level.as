@@ -136,6 +136,7 @@ package
 			if (! started || ! Main.focused) { return; }
 			
 			if (Input.pressed(Key.ESCAPE)) {
+				Logger.endPlay("pressed escape");
 				save(false);
 				FP.world = new Level();
 				Main(FP.engine).showButtons();
@@ -275,6 +276,8 @@ package
 		{
 			Mouse.show();
 			
+			Logger.endPlay("WON!");
+			
 			var congrats:MyTextField = new MyTextField(145, 70, "Congratulations", "center", 30);
 			var mins:int = time / 600;
 			var secs:Number = (time % 600) / 10.0;
@@ -372,6 +375,8 @@ package
 		{
 			Mouse.show();
 			
+			Logger.endPlay("died");
+			
 			var gameOver:MyTextField = new MyTextField(150, 70, "Failure", "center", 30);
 			var mins:int = time / 600;
 			var secs:Number = (time % 600) / 10.0;
@@ -437,6 +442,7 @@ package
 				level.started = true;
 				FP.stage.focus = FP.stage;
 				Mouse.hide();
+				Logger.startPlay("Realism mode", "retry");
 			};
 			
 			backButton.addEventListener(MouseEvent.CLICK, escapeHandler);
