@@ -8,7 +8,7 @@ package
 	import flash.events.*;
 	import flash.display.*;
 	
-	[SWF(width = "300", height = "250", backgroundColor="#FFFFFF")]
+	[SWF(width = "450", height = "294", backgroundColor="#FFFFFF")]
 	public class Main extends Engine
 	{
 		public static var clickText: TextField;
@@ -16,6 +16,8 @@ package
 		public static var focused: Boolean = false;
 		
 		public static var realism:Boolean = false;
+		
+		public static var magic:Number = 1.5;
 		
 		public function Main()
 		{
@@ -25,7 +27,10 @@ package
 			
 			FP.world = new Level();
 			FP.screen.color = Level.BLANK;
-			FP.screen.scale = 2;
+			FP.screen.scale = 3;
+			
+			this.y = -81;
+			//this.scaleX = this.scaleY = 1.5;
 		}
 		
 		public override function setStageProperties():void
@@ -35,11 +40,14 @@ package
 			stage.scaleMode = StageScaleMode.SHOW_ALL;
 		}
 		
-		public var newGameButton:Button;
-		public var continueButton:Button;
-		public var noDeathButton:Button;
-		public var stats:MyTextField;
-		public var continueStats:MyTextField;
+		public static var title: MyTextField;
+		public static var credits: MyTextField;
+		public static var newGameButton:Button;
+		public static var continueButton:Button;
+		public static var noDeathButton:Button;
+		public static var moreGamesButton:Button;
+		public static var stats:MyTextField;
+		public static var continueStats:MyTextField;
 		
 		public override function init (): void
 		{
@@ -56,42 +64,41 @@ package
 			var ss:StyleSheet = new StyleSheet();
 			ss.parseCSS("a:hover { text-decoration: underline; } a { text-decoration: none; color: #FF8B60; }");
 
-			var title: MyTextField = new MyTextField(2, 6, "Terrible Tiny Traps", "left", 20);
+			title = new MyTextField(150*magic, 6*magic, "Terrible Tiny Traps", "center", 20*magic);
 
-			var credits: MyTextField = new MyTextField(2, 32, "", "left", 10);
-			credits.htmlText = 'Created by <a href="http://www.draknek.org/?ref=ttt" target="_blank">Alan Hazelden</a> for <a href="http://www.reddit.com/r/RedditGameJam/" target="_blank">Reddit Game Jam 03</a>';
+			credits = new MyTextField(150*magic, 32*magic, "", "center", 10);
+			credits.htmlText = 'Created by <a href="http://www.draknek.org/?ref=ttt" target="_blank">Alan Hazelden</a>';// for <a href="http://www.reddit.com/r/RedditGameJam/" target="_blank">Reddit Game Jam 03</a>';
 			credits.mouseEnabled = true;
 			credits.styleSheet = ss;
 			
-			clickText = new MyTextField(150, 125, "Click to continue", "center", 20);
+			clickText = new MyTextField(150*magic, (125+14)*magic, "Click to continue", "center", 20);
 			clickText.visible = false;
 			
-			addChild(title);
-			addChild(credits);
+			//addChild(title);
+			//addChild(credits);
 			addChild(clickText);
 			
 			Data.load("tinytraps");
 			
 			newGameButton = new Button("New Game", 20);
-			newGameButton.x = 150 - newGameButton.width*0.5;
+			newGameButton.x = 150*magic - newGameButton.width*0.5;
 			
 			continueButton = new Button("Continue", 20);
-			continueButton.x = 150 - continueButton.width*0.5;
+			continueButton.x = 150*magic - continueButton.width*0.5;
 			
 			noDeathButton = new Button("Realism Mode", 20);
-			noDeathButton.x = 150 - noDeathButton.width*0.5;
+			noDeathButton.x = 150*magic - noDeathButton.width*0.5;
 			
-			stats = new MyTextField(150, 50, "", "center", 15);
-			continueStats = new MyTextField(150, 50, "", "left", 10);
+			moreGamesButton = new Button("More Games", 20);
+			moreGamesButton.x = 150*magic - moreGamesButton.width*0.5;
+			
+			stats = new MyTextField(150*magic, 50, "", "center", 15);
+			continueStats = new MyTextField(150*magic, 50, "", "left", 10);
 			continueStats.x = continueButton.x + continueButton.width + 5;
 			
 			continueButton.addEventListener(MouseEvent.CLICK, function ():void {
 				Main.realism = false;
-				removeChild(continueButton);
-				removeChild(newGameButton);
-				if (continueStats.parent) removeChild(continueStats);
-				if (stats.parent) removeChild(stats);
-				if (noDeathButton.parent) removeChild(noDeathButton);
+				removeElements();
 				Level(FP.world).load();
 				FP.stage.focus = FP.stage;
 				Mouse.hide();
@@ -100,11 +107,7 @@ package
 			
 			newGameButton.addEventListener(MouseEvent.CLICK, function ():void {
 				Main.realism = false;
-				if (continueButton.parent) removeChild(continueButton);
-				if (continueStats.parent) removeChild(continueStats);
-				if (stats.parent) removeChild(stats);
-				if (noDeathButton.parent) removeChild(noDeathButton);
-				removeChild(newGameButton);
+				removeElements();
 				Level.clearSave();
 				Level(FP.world).started = true;
 				FP.stage.focus = FP.stage;
@@ -114,11 +117,7 @@ package
 			
 			noDeathButton.addEventListener(MouseEvent.CLICK, function ():void {
 				Main.realism = true;
-				if (continueButton.parent) removeChild(continueButton);
-				if (continueStats.parent) removeChild(continueStats);
-				if (stats.parent) removeChild(stats);
-				if (noDeathButton.parent) removeChild(noDeathButton);
-				removeChild(newGameButton);
+				removeElements();
 				Level(FP.world).started = true;
 				FP.stage.focus = FP.stage;
 				Mouse.hide();
@@ -161,6 +160,11 @@ package
 			if (bestTime >= 0) {
 				b.push(noDeathButton);
 				
+			}
+			
+			b.push(moreGamesButton);
+			
+			if (bestTime >= 0) {
 				mins = bestTime / 600;
 				secs = (bestTime % 600) / 10.0;
 				
@@ -189,21 +193,47 @@ package
 		
 		public static function addElements(b:Array):void
 		{
+			Main.title.y = 6 + 81;
+			Main.credits.y = Main.title.height + Main.title.y;
+			FP.engine.addChild(Main.credits);
+			FP.engine.addChild(Main.title);
+			
 			var h:Number = 0;
 			
 			for each (var o:DisplayObject in b) {
 				h += o.height;
 			}
 			
-			var s:Number = 200 - h;
+			var start:Number = Main.credits.y + Main.credits.height; // 54*magic
+			
+			var s:Number = 250*magic - h - start;
 			s /= b.length + 1;
 			
-			var y:Number = 54 + s;
+			var y:Number = start + s;
 			
 			for each (o in b) {
 				o.y = int(y);
 				FP.engine.addChild(o);
 				y += s + o.height;
+			}
+		}
+		
+		public static function removeElements(b:Array = null):void
+		{
+			FP.engine.removeChild(Main.credits);
+			FP.engine.removeChild(Main.title);
+			
+			if (Main.continueButton.parent) FP.engine.removeChild(Main.continueButton);
+			if (Main.continueStats.parent) FP.engine.removeChild(Main.continueStats);
+			if (Main.stats.parent) FP.engine.removeChild(Main.stats);
+			if (Main.noDeathButton.parent) FP.engine.removeChild(Main.noDeathButton);
+			if (Main.moreGamesButton.parent) FP.engine.removeChild(Main.moreGamesButton);
+			if (Main.newGameButton.parent) FP.engine.removeChild(Main.newGameButton);
+			
+			if (b) {
+				for each (var o:DisplayObject in b) {
+					if (o.parent) FP.engine.removeChild(o);
+				}
 			}
 		}
 		

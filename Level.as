@@ -17,8 +17,10 @@ package
 		
 		public static const BLANK: uint = 0xFFFFFF;
 		public static const SOLID: uint = 0x333333;
-		public static const SPIKE: uint = 0xFF9494FF;
-		public static const PLAYER: uint = 0xFFFF8B60;
+		public static const PLAYER: uint = 0xFF9494FF;
+		public static const TARGET: uint = 0xFF94FF94;
+		public static const SPIKE: uint = 0xFFFF8B60;
+		public static const NEWRECORD: uint = 0xFFFF8B60;
 		public static const SPECIAL: uint = 0x654321;
 		
 		public var player: Player;
@@ -278,7 +280,7 @@ package
 			
 			Logger.endPlay("WON!");
 			
-			var congrats:MyTextField = new MyTextField(145, 70, "Congratulations", "center", 30);
+			var congrats:MyTextField = new MyTextField(145*Main.magic, 70, "Congratulations", "center", 30);
 			var mins:int = time / 600;
 			var secs:Number = (time % 600) / 10.0;
 			//var timeString:String = mins + ":" + (secs < 10 ? "0" : "") + secs;
@@ -286,12 +288,12 @@ package
 			var deathString:String = "with " + deaths + " deaths";
 			if (deaths == 1) { deathString = "with only one death!" }
 			else if (deaths == 0) { deathString = "without dying!" }
-			var stats:MyTextField = new MyTextField(145, 120, "You mastered the traps\nin " + timeString + "\n" + deathString, "center", 20);
+			var stats:MyTextField = new MyTextField(145*Main.magic, 120, "You mastered the traps\nin " + timeString + "\n" + deathString, "center", 20);
 			
 			started = false;
 			
 			var backButton:Button = new Button("Back", 20);
-			backButton.x = 150 - backButton.width*0.5;
+			backButton.x = 150*Main.magic - backButton.width*0.5;
 			backButton.y = 200;
 			
 			var bestTime:int = Data.readInt("besttime", -1);
@@ -327,7 +329,7 @@ package
 				Data.save("tinytraps");
 				
 				newRecord = new MyTextField(150, 0, "New record!", "center", 15);
-				newRecord.textColor = PLAYER;
+				newRecord.textColor = NEWRECORD;
 			}
 			
 			if (deathString.substr(-1) != "!") deathString += "!";
@@ -343,21 +345,20 @@ package
 				
 				//s.height = h;
 				
-				newRecord.x = 150 - int(w * 0.5);
+				newRecord.x = 150*Main.magic - int(w * 0.5);
 				tweetButton.x = newRecord.x + newRecord.width + 6;
 				
 				s.addChild(newRecord);
 				s.addChild(tweetButton);
 				b.push(s);
 			} else {
-				tweetButton.x = 150 - tweetButton.width*0.5;
+				tweetButton.x = 150*Main.magic - tweetButton.width*0.5;
 				b.push(tweetButton);
 			}
 			
 			escapeHandler = function ():void {
-				for each (var o:DisplayObject in b) {
-					if (o.parent) FP.engine.removeChild(o);
-				}
+				Main.removeElements(b);
+				
 				FP.world = new Level();
 				Main(FP.engine).showButtons();
 				FP.stage.focus = FP.stage;
@@ -377,7 +378,7 @@ package
 			
 			Logger.endPlay("died");
 			
-			var gameOver:MyTextField = new MyTextField(150, 70, "Failure", "center", 30);
+			var gameOver:MyTextField = new MyTextField(150*Main.magic, 70, "Failure", "center", 30);
 			var mins:int = time / 600;
 			var secs:Number = (time % 600) / 10.0;
 			//var timeString:String = mins + ":" + (secs < 10 ? "0" : "") + secs;
@@ -387,7 +388,7 @@ package
 			if (targetCount == 0) targetString = "no checkpoints";
 			else if (targetCount == 1) targetString = "one checkpoint";
 			
-			var stats:MyTextField = new MyTextField(150, 120, "You reached\n" + targetString + "\n" + "in " + timeString + "\n before dying", "center", 20);
+			var stats:MyTextField = new MyTextField(150*Main.magic, 120, "You reached\n" + targetString + "\n" + "in " + timeString + "\n before dying", "center", 20);
 			started = false;
 			
 			var backButton:Button = new Button("Back", 20);
@@ -398,7 +399,7 @@ package
 			buttons.addChild(backButton);
 			buttons.addChild(retryButton);
 			
-			backButton.x = 150 - int(backButton.width + retryButton.width + 12) * 0.5;
+			backButton.x = 150*Main.magic - int(backButton.width + retryButton.width + 12) * 0.5;
 			retryButton.x = backButton.x + backButton.width + 12;
 			
 			var b:Array = [gameOver, stats];
@@ -415,27 +416,23 @@ package
 			if (isNewRecord) {
 				Data.save("tinytraps");
 				
-				var newRecord:MyTextField = new MyTextField(150, 0, "New record!", "center", 15);
-				newRecord.textColor = PLAYER;
+				var newRecord:MyTextField = new MyTextField(150*Main.magic, 0, "New record!", "center", 15);
+				newRecord.textColor = NEWRECORD;
 				
-				newRecord.x = 150 - newRecord.width*0.5;
+				newRecord.x = 150*Main.magic - newRecord.width*0.5;
 				
 				b.push(newRecord);
 			}
 			
 			escapeHandler = function ():void {
-				for each (var o:DisplayObject in b) {
-					if (o.parent) FP.engine.removeChild(o);
-				}
+				Main.removeElements(b);
 				FP.world = new Level();
 				Main(FP.engine).showButtons();
 				FP.stage.focus = FP.stage;
 			};
 			
 			actionHandler = function ():void {
-				for each (var o:DisplayObject in b) {
-					if (o.parent) FP.engine.removeChild(o);
-				}
+				Main.removeElements(b);
 				Main.realism = true;
 				var level:Level = new Level;
 				FP.world = level;
