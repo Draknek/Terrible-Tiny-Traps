@@ -8,7 +8,8 @@ package
 	import flash.events.*;
 	import flash.display.*;
 	
-	[SWF(width = "450", height = "294", backgroundColor="#FFFFFF")]
+	[SWF(width = "300", height = "250", backgroundColor="#FFFFFF")]
+	//[SWF(width = "450", height = "294", backgroundColor="#FFFFFF")]
 	public class Main extends Engine
 	{
 		public static var clickText: TextField;
@@ -17,7 +18,12 @@ package
 		
 		public static var realism:Boolean = false;
 		
-		public static var magic:Number = 1.5;
+		// Magic versioning constants
+		public static const magic:Number = 1.0;
+		public static const header:Boolean = true;
+		public static const showReddit:Boolean = true;
+		public static const showMoreGames:Boolean = false;
+		public static const altColours:Boolean = false;
 		
 		public function Main()
 		{
@@ -27,10 +33,9 @@ package
 			
 			FP.world = new Level();
 			FP.screen.color = Level.BLANK;
-			FP.screen.scale = 3;
+			FP.screen.scale = magic * 2;
 			
-			this.y = -81;
-			//this.scaleX = this.scaleY = 1.5;
+			this.y = header ? 0 : -54*magic;
 		}
 		
 		public override function setStageProperties():void
@@ -64,18 +69,26 @@ package
 			var ss:StyleSheet = new StyleSheet();
 			ss.parseCSS("a:hover { text-decoration: underline; } a { text-decoration: none; color: #FF8B60; }");
 
-			title = new MyTextField(150*magic, 6*magic, "Terrible Tiny Traps", "center", 20*magic);
+			title = new MyTextField(header ? 2*magic : 150*magic, 6*magic, "Terrible Tiny Traps", header ? "left" : "center", 20*magic);
 
-			credits = new MyTextField(150*magic, 32*magic, "", "center", 10);
-			credits.htmlText = 'Created by <a href="http://www.draknek.org/?ref=ttt" target="_blank">Alan Hazelden</a>';// for <a href="http://www.reddit.com/r/RedditGameJam/" target="_blank">Reddit Game Jam 03</a>';
+			credits = new MyTextField(header ? 2*magic : 150*magic, 32*magic, "", header ? "left" : "center", 10);
+			credits.htmlText = 'Created by <a href="http://www.draknek.org/?ref=ttt" target="_blank">Alan Hazelden</a>';
+			
+			if (showReddit) {
+				credits.htmlText += ' for <a href="http://www.reddit.com/r/RedditGameJam/" target="_blank">Reddit Game Jam 03</a>';
+			}
+			
 			credits.mouseEnabled = true;
 			credits.styleSheet = ss;
 			
-			clickText = new MyTextField(150*magic, (125+14)*magic, "Click to continue", "center", 20);
+			clickText = new MyTextField(150*magic, (125+14-14*int(header))*magic, "Click to continue", "center", 20);
 			clickText.visible = false;
 			
-			//addChild(title);
-			//addChild(credits);
+			if (header) {
+				addChild(title);
+				addChild(credits);
+			}
+			
 			addChild(clickText);
 			
 			Data.load("tinytraps");
@@ -162,7 +175,9 @@ package
 				
 			}
 			
-			b.push(moreGamesButton);
+			if (showMoreGames) {
+				b.push(moreGamesButton);
+			}
 			
 			if (bestTime >= 0) {
 				mins = bestTime / 600;
@@ -193,10 +208,12 @@ package
 		
 		public static function addElements(b:Array):void
 		{
-			Main.title.y = 6 + 81;
-			Main.credits.y = Main.title.height + Main.title.y;
-			FP.engine.addChild(Main.credits);
-			FP.engine.addChild(Main.title);
+			if (! header) {
+				Main.title.y = (4 + 54)*magic;
+				Main.credits.y = Main.title.height + Main.title.y;
+				FP.engine.addChild(Main.credits);
+				FP.engine.addChild(Main.title);
+			}
 			
 			var h:Number = 0;
 			
@@ -204,7 +221,7 @@ package
 				h += o.height;
 			}
 			
-			var start:Number = Main.credits.y + Main.credits.height; // 54*magic
+			var start:Number = header ? 54*magic : Main.credits.y + Main.credits.height;
 			
 			var s:Number = 250*magic - h - start;
 			s /= b.length + 1;
@@ -220,8 +237,10 @@ package
 		
 		public static function removeElements(b:Array = null):void
 		{
-			FP.engine.removeChild(Main.credits);
-			FP.engine.removeChild(Main.title);
+			if (! header) {
+				FP.engine.removeChild(Main.credits);
+				FP.engine.removeChild(Main.title);
+			}
 			
 			if (Main.continueButton.parent) FP.engine.removeChild(Main.continueButton);
 			if (Main.continueStats.parent) FP.engine.removeChild(Main.continueStats);

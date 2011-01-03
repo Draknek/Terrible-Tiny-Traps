@@ -17,10 +17,14 @@ package
 		
 		public static const BLANK: uint = 0xFFFFFF;
 		public static const SOLID: uint = 0x333333;
-		public static const PLAYER: uint = 0xFF9494FF;
-		public static const TARGET: uint = 0xFF94FF94;
-		public static const SPIKE: uint = 0xFFFF8B60;
-		public static const NEWRECORD: uint = 0xFFFF8B60;
+		public static const RED: uint = 0xFFFF8B60;
+		public static const BLUE: uint = 0xFF9494FF;
+		public static const PLAYER: uint = Main.altColours ? BLUE : RED;
+		public static const SPIKE: uint = Main.altColours ? RED : BLUE;
+		//public static const TARGET: uint = 0xFF94FF94;
+		
+		public static const NEWRECORD: uint = RED;
+		
 		public static const SPECIAL: uint = 0x654321;
 		
 		public var player: Player;
