@@ -158,6 +158,7 @@ package
 			time++;
 			
 			if (time % 10 == 0) save(false);
+			if (time % 150 == 0) Logger.update();
 		}
 		
 		public override function render (): void

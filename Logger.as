@@ -83,6 +83,14 @@ package
 			Log.LevelCounterMetric("deaths", levelName);
 		}
 		
+		public static function update():void
+		{
+			var total:int = 12 - FP.world.classCount(Target);
+			var deaths:int = Level(FP.world).deaths;
+			
+			FGL.alert(total, "", "Deaths: " + deaths);
+		}
+		
 	}
 }
 
