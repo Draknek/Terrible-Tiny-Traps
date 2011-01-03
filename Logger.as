@@ -3,7 +3,7 @@ package
 	import flash.display.*;
 	import FGL.GameTracker.*;
 	import net.flashpunk.*;
-	import SWFStats.*;
+	import Playtomic.*;
 	import flash.system.Security;
 
 	public class Logger
@@ -45,14 +45,14 @@ package
 			if (realism) realism = ", " + realism;
 			FGL.alert(total, "", message + realism);
 			
-			var levelName:String = Main.realism ? "Realism mode" : "Normal mode";
+			/*var levelName:String = Main.realism ? "Realism mode" : "Normal mode";
 			
 			Log.CustomMetric(_message, levelName);
 			
 			Log.LevelAverageMetric("time", levelName, time);
 			
 			Log.LevelAverageMetric("checkpoints2", levelName, total);
-			Log.LevelAverageMetric("deaths2", levelName, deaths);
+			Log.LevelAverageMetric("deaths2", levelName, deaths);*/
 		}
 		
 		public static function checkpoint(id:int, total:int):void
@@ -61,6 +61,7 @@ package
 			Mochi.trackEvent("targetcount", total);
 			
 			var deaths:int = Level(FP.world).deaths;
+			var time:int = Level(FP.world).time;
 			
 			var realism:String = Main.realism ? "Realism mode" : "";
 			
@@ -69,18 +70,29 @@ package
 			if (realism) realism = ", " + realism;
 			FGL.alert(total, "", "Checkpoint " + id + ", deaths: " + deaths + realism);
 			
-			var levelName:String = Main.realism ? "Realism mode" : "Normal mode";
+			/*var levelName:String = Main.realism ? "Realism mode" : "Normal mode";
 			
 			Log.LevelCounterMetric("checkpoints", levelName);
 			
-			Log.CustomMetric("Checkpoint " + id, levelName);
+			Log.CustomMetric("Checkpoint " + id, levelName);*/
+			
+			Log.LevelCounterMetric("id_checkpoint", l(id));
+			Log.LevelCounterMetric("total_checkpoint", l(total));
+			Log.LevelAverageMetric("id_deaths", l(id), deaths);
+			Log.LevelAverageMetric("total_deaths", l(total), deaths);
+			Log.LevelAverageMetric("id_time", l(id), time);
+			Log.LevelAverageMetric("total_time", l(total), time);
 		}
 		
 		public static function died():void
 		{
-			var levelName:String = Main.realism ? "Realism mode" : "Normal mode";
+			/*var levelName:String = Main.realism ? "Realism mode" : "Normal mode";
 			
-			Log.LevelCounterMetric("deaths", levelName);
+			Log.LevelCounterMetric("deaths", levelName);*/
+			
+			var total:int = 12 - FP.world.classCount(Target);
+			
+			Log.LevelCounterMetric("deaths_before_total", l(total + 1));
 		}
 		
 		public static function update():void
@@ -91,6 +103,13 @@ package
 			FGL.alert(total, "", "Deaths: " + deaths);
 		}
 		
+		private static function l (n:int):String
+		{
+			var s:String = Main.realism ? "r" : "n";
+			if (n < 10) s += "0";
+			s += n;
+			return s;
+		}
 	}
 }
 
