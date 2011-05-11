@@ -8,8 +8,8 @@ package
 	import flash.events.*;
 	import flash.display.*;
 	
-	[SWF(width = "300", height = "250", backgroundColor="#FFFFFF")]
-	//[SWF(width = "450", height = "294", backgroundColor="#FFFFFF")]
+	//[SWF(width = "300", height = "250", backgroundColor="#FFFFFF")]
+	[SWF(width = "450", height = "294", backgroundColor="#FFFFFF")]
 	public class Main extends Engine
 	{
 		public static var clickText: TextField;
@@ -19,11 +19,11 @@ package
 		public static var realism:Boolean = false;
 		
 		// Magic versioning constants
-		public static const magic:Number = 1.0;
-		public static const header:Boolean = true;
+		public static const magic:Number = 1.5; // 1.0 or 1.5
+		public static const header:Boolean = false;
 		public static const showReddit:Boolean = true;
 		public static const showMoreGames:Boolean = false;
-		public static const altColours:Boolean = false;
+		public static const altColours:Boolean = true;
 		
 		public function Main()
 		{
@@ -56,7 +56,7 @@ package
 		
 		public override function init (): void
 		{
-			sitelock(["draknek.org", "reddit.com", "redditmedia.com", "redditads.s3.amazonaws.com"]);
+			sitelock(["draknek.org", "reddit.com", "redditmedia.com", "redditads.s3.amazonaws.com", "flashgamelicense.com"]);
 			
 			FP.stage.addEventListener(MouseEvent.MOUSE_DOWN, mouseClick);
 			FP.stage.addEventListener(Event.ACTIVATE, focusGain);

@@ -12,6 +12,7 @@ package
 		private static var jump:SfxrSynth;
 		private static var death:SfxrSynth;
 		private static var target:SfxrSynth;
+		private static var bounce:SfxrSynth;
 		
 		private static var _mute:Boolean = false;
 		private static var so:SharedObject;
@@ -47,6 +48,10 @@ package
 			//target.setSettingsString("1,0.072,0.009,,0.51,0.374,0.034,0.139,,0.596,0.542,0.013,,0.047,0.015,,0.014,0.021,1,,0.025,,,0.3");
 			target.setSettingsString("2,0.072,0.05,,0.51,0.55,0.034,0.08,0.179,0.596,0.542,0.013,,0.047,0.015,,0.014,0.021,0.91,,0.025,,,0.3");
 			target.cacheMutations(4);
+			
+			bounce = new SfxrSynth();
+			bounce.setSettingsString("0,,0.031,,0.23,0.26,,-0.35,,,,,,0.493,,,,,0.77,,,0.49,,0.26");
+			bounce.cacheMutations(4);
 		}
 		
 		public static function play (sound:String):void

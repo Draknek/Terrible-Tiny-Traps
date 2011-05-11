@@ -29,9 +29,11 @@ package
 		
 		public var player: Player;
 		
+		public var fallingPlayer:FallingPlayer;
+		
 		public var started:Boolean = false;
 		
-		public var time:int = 0;
+		public var time:int = 1;
 		public var deaths:int = 0;
 		
 		public var escapeHandler:Function;
@@ -56,6 +58,9 @@ package
 			solid.mask = grid;
 			
 			player = new Player();
+			
+			player.active = false;
+			player.visible = false;
 			
 			add(player);
 			
@@ -88,6 +93,10 @@ package
 						add(new Spike(x, y));
 					}
 					else if (colour == 0xFF00FF) {
+						if(! fallingPlayer) {
+							add(fallingPlayer = new FallingPlayer(x, y));
+						}
+						
 						targetID++;
 						
 						add(new Target(x - 2, y, targetID));
@@ -159,10 +168,16 @@ package
 			
 			super.update();
 			
-			time++;
+			if (fallingPlayer) {
+				if (Input.pressed(-1)) {
+					remove(fallingPlayer);
+				}
+			} else {
+				time++;
 			
-			if (time % 10 == 0) save(false);
-			if (time % 150 == 0) Logger.update();
+				if (time % 10 == 0) save(false);
+				if (time % 150 == 0) Logger.update();
+			}
 		}
 		
 		public override function render (): void
@@ -178,6 +193,8 @@ package
 		
 		public function load ():void
 		{
+			remove(fallingPlayer);
+			
 			Data.load("tinytraps");
 			player.x = player.spawnX = Data.readInt("playerx", player.x);
 			player.y = player.spawnY = Data.readInt("playery", player.y);
@@ -251,7 +268,7 @@ package
 				
 				if (targetCount <= 9)
 				{
-					collideRectInto(type, 10, 86, 20, 26, a);
+					collideRectInto(type, 10, 86, 20, 100, a);
 					collideRectInto(type, 49, 76, 21, 16, a);
 					collideRectInto(type, 76, 63, 13, 18, a);
 					collideRectInto(type, 116, 43, 31, 35, a);
