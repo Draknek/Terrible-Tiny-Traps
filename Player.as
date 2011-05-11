@@ -13,7 +13,7 @@ package
 		[Embed(source = 'mask.png')]
 		public static var maskGfx: Class;
 		
-		public var spritemap: Spritemap = new Spritemap(playerGfx, 3, 4);
+		public var spritemap: Spritemap = new Spritemap(playerGfx, 5, 4);
 		
 		public var dx: int = 1;
 		
@@ -33,6 +33,7 @@ package
 			spritemap.color = Level.PLAYER;
 			
 			spritemap.frame = 5;
+			spritemap.x = -1;
 			
 			type = "player";
 			
