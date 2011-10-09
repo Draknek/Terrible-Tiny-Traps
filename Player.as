@@ -44,6 +44,7 @@ package
 			Input.define("L", Key.LEFT, Key.A);
 			Input.define("R", Key.RIGHT, Key.D);
 			Input.define("JUMP", Key.UP, Key.W, Key.SPACE, Key.Z, Key.X, Key.C);
+            Input.define("MUSICDEBUG", Key.N);
 		}
 		
 		public override function update (): void
@@ -91,7 +92,11 @@ package
 			
 			e = collide("solid", x, y + 1);
 			
-			if (e) { canJump = true; }
+			if (e) 
+            { 
+                canJump = true; 
+                Audio.portamento = false;
+            }
 			
 			if (dx != 0) {
 				spritemap.flipped = (dx > 0);
@@ -107,6 +112,7 @@ package
 			if (canJump && (Input.check("JUMP") || Input.pressed("JUMP"))) {
 				jumpCount = 5;
 				Audio.play("jump");
+                Audio.portamento = true;
 			}
 			
 			var dy: int = (jumpCount > 0) ? -1 : 1;
@@ -125,6 +131,10 @@ package
 				y += dy;
 				jumpCount--;
 			}
+
+            // REMOVE THIS IN PROPER BUILD
+            if (Input.check("MUSICDEBUG"))
+                Audio.incrementMusic();
 			
 			/*FP.camera.x = x - 80;
 			FP.camera.y = y - 60;*/

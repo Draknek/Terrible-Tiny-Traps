@@ -7,6 +7,7 @@ package
 	import flash.text.*;
 	import flash.events.*;
 	import flash.display.*;
+
 	
 	//[SWF(width = "300", height = "250", backgroundColor="#FFFFFF")]
 	[SWF(width = "450", height = "294", backgroundColor="#FFFFFF")]
@@ -17,6 +18,7 @@ package
 		public static var focused: Boolean = false;
 		
 		public static var realism:Boolean = false;
+
 		
 		// Magic versioning constants
 		public static const magic:Number = 1.5; // 1.0 or 1.5
