@@ -159,6 +159,9 @@ package
 				Mouse.show();
 				return;
 			}
+
+            // Dunno if this is the right place to put this
+            Audio.setMusicTensionLevel(11 - classCount(Target));
 			
 			if (classCount(Target) == 0) {
 				completed();

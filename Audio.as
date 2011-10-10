@@ -10,29 +10,44 @@ package
     // Sound stuff
     import org.si.sion.*;
     import org.si.sion.events.*;
-    import org.si.sion.effector.*;
+    import org.si.sion.sequencer.*;
     import org.si.sion.utils.SiONPresetVoice;
     import org.si.sound.PatternSequencer;
     import org.si.sound.patterns.Note;
 
 	public class Audio
 	{
+        //Set the tempo here
+        private static const TEMPO:int = 100;
         // Sound driver
         private static var driver:SiONDriver = new SiONDriver();
 
         // Preset sound voices
         private static var presetVoice:SiONPresetVoice = new SiONPresetVoice();
 
-        private static var patternSequencer:PatternSequencer = new PatternSequencer(32);
-        private static var _sequencerPortamento:Boolean = false;
-
-        private static var rhythmLoop:SiONData;
         private static var beatCounter:int;
 
-        private static var patternIndex:int = -1;
-        private static var patternArray:Array = new Array();
-        private static var patternCurrent:Vector.<Note>;
+        private static var musicTensionLevel:int = -1;
+
         private static var patternChanged:Boolean = false;
+
+        private static var drumPatternArray:Vector.<SiONData> = new Vector.<SiONData>();
+        private static var drumPatternCurrent:SiONData;
+        private static var drumsArePlaying:Boolean = false;
+
+        private static var currentSequence:Vector.<SiMMLTrack> = new Vector.<SiMMLTrack>();
+
+        private static var bassPatternSequencer:PatternSequencer = new PatternSequencer(32);
+        //private static var bassPatternMaster:Vector.<Note> = new Vector.<Note>(32, true);
+        private static var bassPatternArray:Vector.<Vector.<Note>> = new Vector.<Vector.<Note>>(12, true);
+        private static var bassPatternCurrent:Vector.<Note> = new Vector.<Note>(32, true);
+
+        private static var leadPatternSequencer:PatternSequencer = new PatternSequencer(32);
+        //private static var leadPatternMaster:Vector.<Note> = new Vector.<Note>(32, true);
+        private static var leadPatternArray:Vector.<Vector.<Note>> = new Vector.<Vector.<Note>>(12, true);
+        private static var leadPatternCurrent:Vector.<Note> = new Vector.<Note>(32, true);
+
+        private static var _leadSequencerPortamento:Boolean = false;
 
 		private static var jump:SfxrSynth;
 		private static var death:SfxrSynth;
@@ -78,125 +93,345 @@ package
 			bounce.setSettingsString("0,,0.031,,0.23,0.26,,-0.35,,,,,,0.493,,,,,0.77,,,0.49,,0.26");
 			bounce.cacheMutations(4);
 
-            /// Set up MML data
-            // Set up the rhythm loop
-            var mml:String = "t100;";                           // Set the tempo.
-            //      Inst   |Vol|Oct|Len|Sequence
-            mml += "%6@1    v4  o3  l8  $c2 c c. c.;";             // Kick pattern (voice 1)
-            mml += "%6@2    v4  o3      $r c r c;";                // Snare pattern (voice 2)
-            mml += "%6@3    v2      l16 $[c r c c r r c c];";      // Closed Hat pattern (voice 3)
-            mml += "%6@4    v2  o3      $r c8 r16 c16 r c8 r8;";   // Open Hat pattern (voice 4)
-            mml += "%6@5    v1  o2  l2  $a. r4 a. r4;";              // Bass pattern (voice 5)
+            //---------------------------------
+            //         DRUM TRACK
+            //---------------------------------
+            // Loop one:
+            var drums1:String;  
+            //         Inst   |Vol|Oct|Sequence
+            drums1 =  "%6@1    v4  o3  $c2 c2;";                  // Kick pattern (voice 1)
+            //drums1 += "%6@5    v2  o4  $a4 a4 a4 a4;";                      //percussion (voice 5)
 
-            rhythmLoop = driver.compile(mml);
+            // Loop two:
+            var drums2:String;  
+            drums2 =  "%6@1    v4  o3  $c4 c4 c4 c4;";            // Kick pattern (voice 1)
+
+            // Loop three:
+            var drums3:String;  
+            drums3 =  "%6@1    v4  o3  $c4 c4 c4 c4;";            // Kick pattern (voice 1)
+            drums3 += "%6@3    v1  p2  $c8 c8 c8 c8 c8 c8 c8 c8;";   // Closed Hat pattern (voice 3)
+
+            // Loop four:
+            var drums4:String;  
+            drums4 =  "%6@1    v4  o3  $c4 c4 c4 r8 c8;";             // Kick pattern (voice 1)
+            drums4 += "%6@3    v1  p2  $c8 c8 c8 c8 c8 c8 c8 c8;";    // Closed Hat pattern (voice 3)
+
+            // Loop five:
+            var drums5:String;  
+            drums5 =  "%6@1    v4  o3  $c4 c4 c4 c8 c8;";             // Kick pattern (voice 1)
+            drums5 += "%6@3    v1  p2  $c16 c16 c8 c8 c8 c16 c16 c8 c8 c8;";   // Closed Hat pattern (voice 3)
+
+            // Loop six:
+            var drums6:String;  
+            drums6 =  "%6@1    v4  o3  $c4 c4 c4 c8 c8;";             // Kick pattern (voice 1)
+            drums6 += "%6@3    v1  p2  $c16 c16 c8 c8 c8 c16 c16 c8 c16 c16;";   // Closed Hat pattern (voice 3)
+
+            // Loop seven:
+            var drums7:String;  
+            drums7 =  "%6@1    v4  o3  $c8 c8 c4 c4 c8 c8;";          // Kick pattern (voice 1)
+            drums7 += "%6@3    v1  p2  $c16 c16 c8 c8 c8 c16 c16 c8 c16 c16;";   // Closed Hat pattern (voice 3)
+
+            // Loop eight:
+            var drums8:String;  
+            drums8 =  "%6@1    v4  o3  $c8 c8 c4 c4 c8 c8;";          // Kick pattern (voice 1)
+            drums8 += "%6@3    v1  p2  $c16 c16 c8 c8 c8 c16 c16 c8 c16 c16;";   // Closed Hat pattern (voice 3)
+            drums8 += "%6@4 p6 v2  o3  $r4 c8 r16 c16 r4 c8 c4;";   // Open Hat pattern (voice 4)
+
+            // Loop nine:
+            var drums9:String;  
+            drums9 =  "%6@1    v4  o3  $c8 c8 c4 c4 c8 c8;";          // Kick pattern (voice 1)
+            drums9 += "%6@3    v1  p2  $c16 c16 c8 c8 c8 c16 c16 c8 c16 c16;";   // Closed Hat pattern (voice 3)
+            drums9 += "%6@4 p6 v2  o3  $r4 c8 r16 c16 r4 c16 c16 c4;";   // Open Hat pattern (voice 4)
+
+            // Loop ten:
+            var drums10:String;  
+            drums10 =  "%6@1    v4  o3  $c8 c8 c4 c4 c8 c8;";          // Kick pattern (voice 1)
+            drums10 += "%6@3    v1  p2  $c16 c16 c8 c8 c8 c16 c16 c8 c16 c16;";   // Closed Hat pattern (voice 3)
+            drums10 += "%6@4 p6 v2  o3  $c4 c8 r16 c16 r4 c16 c16 c4;";   // Open Hat pattern (voice 4)
+
+            // Loop eleven:
+            var drums11:String;  
+            drums11 =  "%6@1    v4  o3  $c8 c8 c4 c4 c8 c8;";          // Kick pattern (voice 1)
+            drums11 += "%6@2    v4  o3  $r c r c;";                // Snare pattern (voice 2)
+            drums11 += "%6@3    v1  p2  $c16 c16 c8 c8 c8 c16 c16 c8 c16 c16;";   // Closed Hat pattern (voice 3)
+            drums11 += "%6@4 p6 v2  o3  $r4 c8 r16 c16 r4 c16 c16 c4;";   // Open Hat pattern (voice 4)
+
+            // Loop twelve:
+            var drums12:String;  
+            drums12 =  "%6@1    v4  o3  $c16 c16 c16 c16 c4 c16 c16 c16 c16 c4;";          // Kick pattern (voice 1)
+            drums12 += "%6@2    v4  o3  $r c r c;";                // Snare pattern (voice 2)
+            drums12 += "%6@3    v1  p2  $c16 c16 c8 c8 c8 c16 c16 c8 c16 c16;";   // Closed Hat pattern (voice 3)
+            drums12 += "%6@4 p6 v2  o3  $[r8 c8 r8 c8];";   // Open Hat pattern (voice 4)
+            drums12 += "%6@5    v3  o4  $[a16 r16 r8 a16 r16 r8];";                      //percussion (voice 5)
+
+            // Compile the MML:
+            drumPatternArray[0] = driver.compile(drums1);
+            drumPatternArray[1] = driver.compile(drums2);
+            drumPatternArray[2] = driver.compile(drums3);
+            drumPatternArray[3] = driver.compile(drums4);
+            drumPatternArray[4] = driver.compile(drums5);
+            drumPatternArray[5] = driver.compile(drums6);
+            drumPatternArray[6] = driver.compile(drums7);
+            drumPatternArray[7] = driver.compile(drums8);
+            drumPatternArray[8] = driver.compile(drums9);
+            drumPatternArray[9] = driver.compile(drums10);
+            drumPatternArray[10] = driver.compile(drums11);
+            drumPatternArray[11] = driver.compile(drums12);
 
             // Set the voices for each instrument
             var percusVoices:Array = presetVoice["valsound.percus"];
-            rhythmLoop.setVoice(1, percusVoices[1]);  // kick
-            rhythmLoop.setVoice(2, percusVoices[27]); // snare
-            rhythmLoop.setVoice(3, percusVoices[16]); // closed hihat
-            rhythmLoop.setVoice(4, percusVoices[21]); // open hihat
+            for(var i:int = 0; i < drumPatternArray.length; i++)
+            {
+                drumPatternArray[i].setVoice(1, percusVoices[1]);  // kick
+                drumPatternArray[i].setVoice(2, percusVoices[27]); // snare
+                drumPatternArray[i].setVoice(3, percusVoices[16]); // closed hihat
+                drumPatternArray[i].setVoice(4, percusVoices[21]); // open hihat
+                drumPatternArray[i].setVoice(5, presetVoice["midi.percus4"]); // some kind of block?
+            }
 
-            rhythmLoop.setVoice(5, presetVoice["valsound.bass1"]);
-
-            /// Set up the lead sequenced pattern
+            //---------------------------------
+            //         BASS TRACK
+            //---------------------------------
             // The array of different patterns
-            patternArray[0] = new Vector.<Note>(32, true);
-            patternArray[1] = new Vector.<Note>(32, true);
-            patternArray[2] = new Vector.<Note>(32, true);
-            patternArray[3] = new Vector.<Note>(32, true);
-            patternArray[4] = new Vector.<Note>(32, true);
-            patternArray[5] = new Vector.<Note>(32, true);
-            patternArray[6] = new Vector.<Note>(32, true);
-            patternArray[7] = new Vector.<Note>(32, true);
-            patternArray[8] = new Vector.<Note>(32, true);
-            patternArray[9] = new Vector.<Note>(32, true);
-            patternArray[10] = new Vector.<Note>(32, true);
-            patternArray[11] = new Vector.<Note>(32, true);
+            bassPatternArray[0] = new Vector.<Note>(32, true);
+            bassPatternArray[1] = new Vector.<Note>(32, true);
+            bassPatternArray[2] = new Vector.<Note>(32, true);
+            bassPatternArray[3] = new Vector.<Note>(32, true);
+            bassPatternArray[4] = new Vector.<Note>(32, true);
+            bassPatternArray[5] = new Vector.<Note>(32, true);
+            bassPatternArray[6] = new Vector.<Note>(32, true);
+            bassPatternArray[7] = new Vector.<Note>(32, true);
+            bassPatternArray[8] = new Vector.<Note>(32, true);
+            bassPatternArray[9] = new Vector.<Note>(32, true);
+            bassPatternArray[10] = new Vector.<Note>(32, true);
+            bassPatternArray[11] = new Vector.<Note>(32, true);
 
+            // Master Pattern, for reference:
+            /*
+            bassPatternMaster[0] = new Note(33, 64, 3); 
+            bassPatternMaster[1] = null; 
+            bassPatternMaster[2] = null; 
+            bassPatternMaster[3] = new Note(28, 64, 1); 
+            bassPatternMaster[4] = new Note(31, 64, 2); 
+            bassPatternMaster[5] = null; 
+            bassPatternMaster[6] = new Note(32, 64, 2); 
+            bassPatternMaster[7] = null; 
+            bassPatternMaster[8] = new Note(33, 64, 3); 
+            bassPatternMaster[9] = null; 
+            bassPatternMaster[10] = null; 
+            bassPatternMaster[11] = null; 
+            bassPatternMaster[12] = new Note(28, 64, 2); 
+            bassPatternMaster[13] = null; 
+            bassPatternMaster[14] = new Note(43, 64, 2); 
+            bassPatternMaster[15] = null; 
+            bassPatternMaster[16] = new Note(33, 64, 3); 
+            bassPatternMaster[17] = null; 
+            bassPatternMaster[18] = null; 
+            bassPatternMaster[19] = new Note(35, 64, 1); 
+            bassPatternMaster[20] = new Note(34, 64, 2); 
+            bassPatternMaster[21] = null;              
+            bassPatternMaster[22] = new Note(31, 64, 2); 
+            bassPatternMaster[23] = null;              
+            bassPatternMaster[24] = new Note(33, 64, 2); 
+            bassPatternMaster[25] = null; 
+            bassPatternMaster[26] = new Note(21, 64, 2); 
+            bassPatternMaster[27] = null;             
+            bassPatternMaster[28] = new Note(28, 64, 2); 
+            bassPatternMaster[29] = null; 
+            bassPatternMaster[30] = new Note(31, 64, 2);             
+            bassPatternMaster[31] = null; 
+            */
 
-            // Master pattern, for reference:
-            patternArray[0][0] = new Note(45, 64, 4); 
-            patternArray[0][1] = null; 
-            patternArray[0][2] = null; 
-            patternArray[0][3] = null; 
-            patternArray[0][4] = null; 
-            patternArray[0][5] = null; 
-            patternArray[0][6] = null; 
-            patternArray[0][7] = null; 
-            patternArray[0][8] = null; 
-            patternArray[0][9] = null; 
-            patternArray[0][10] = null; 
-            patternArray[0][11] = null; 
-            patternArray[0][12] = null; 
-            patternArray[0][13] = null; 
-            patternArray[0][14] = null; 
-            patternArray[0][15] = null; 
-            patternArray[0][16] = null; 
-            patternArray[0][17] = null; 
-            patternArray[0][18] = null; 
-            patternArray[0][19] = null; 
-            patternArray[0][20] = null; 
-            patternArray[0][21] = null; 
-            patternArray[0][22] = null; 
-            patternArray[0][23] = null; 
-            patternArray[0][24] = null; 
-            patternArray[0][25] = null; 
-            patternArray[0][26] = null; 
-            patternArray[0][27] = null;             
-            patternArray[0][28] = null; 
-            patternArray[0][29] = null; 
-            patternArray[0][30] = null;             
-            patternArray[0][31] = null; 
-
-
-            // Pattern one:
-            //patternArray[0][0] = new Note(46, 64, 4);
-            //patternArray[0][4] = new Note(45, 64, 4);
-            //patternArray[0][8] = new Note(43, 64, 8);
-
-            // Pattern two (I'm using concat to make a duplicate
-            //              of the previous array as opposed to 
-            //              making a reference to it):
-            patternArray[1] = patternArray[0].concat();
-            patternArray[1][12] = new Note(48, 64, 4);
-
-            // Pattern three:
-            patternArray[2] = patternArray[1].concat();
-            patternArray[2][14] = new Note(49, 64, 2);
-
-            // Pattern four:
-            patternArray[3] = patternArray[2].concat();
-            patternArray[3][2] = new Note(50, 64, 2);
-
-            // Pattern five:
-            patternArray[4] = patternArray[3].concat();
-            patternArray[4][6] = new Note(41, 64, 2);
-
-            // Pattern six:
-            patternArray[5] = patternArray[4].concat();
-            patternArray[5][7] = new Note(42, 64, 1);
+            // Pattern 1
+            bassPatternArray[0][0] = new Note(33, 64, 3);
+            bassPatternArray[0][16] = new Note(33, 64, 3); 
             
-            // Pattern seven:
-            patternArray[6] = patternArray[5].concat();
-            patternArray[6][10] = new Note(45, 64, 2);
+            // Pattern 2
+            bassPatternArray[1] = bassPatternArray[0].concat();
+            bassPatternArray[1][8] = new Note(33, 64, 3); 
 
-            // TODO need twelve of these patterns
+            // Pattern 3
+            bassPatternArray[2] = bassPatternArray[1].concat();
+            bassPatternArray[2][30] = new Note(31, 64, 2);             
+
+            // Pattern 4
+            bassPatternArray[3] = bassPatternArray[2].concat();
+            bassPatternArray[3][26] = new Note(21, 64, 2); 
+
+            // Pattern 5
+            bassPatternArray[4] = bassPatternArray[3].concat();
+            bassPatternArray[4][12] = new Note(28, 64, 2); 
+
+            // Pattern 6
+            bassPatternArray[5] = bassPatternArray[4].concat();
+            bassPatternArray[5][3] = new Note(28, 64, 1); 
+            bassPatternArray[5][4] = new Note(31, 64, 2); 
+
+            // Pattern 7
+            bassPatternArray[6] = bassPatternArray[5].concat();
+            bassPatternArray[6][8] = new Note(33, 64, 2); 
+
+            // Pattern 8
+            bassPatternArray[7] = bassPatternArray[6].concat();
+            bassPatternArray[7][19] = new Note(35, 64, 1); 
+            bassPatternArray[7][20] = new Note(34, 64, 2); 
+
+            // Pattern 9
+            bassPatternArray[8] = bassPatternArray[7].concat();
+            bassPatternArray[8][6] = new Note(32, 64, 2); 
+
+            // Pattern 10
+            bassPatternArray[9] = bassPatternArray[8].concat();
+            bassPatternArray[9][24] = new Note(33, 64, 2); 
+
+            // Pattern 11 
+            bassPatternArray[10] = bassPatternArray[9].concat();
+            bassPatternArray[10][28] = new Note(28, 64, 2); 
+
+            // Pattern 12
+            bassPatternArray[11] = bassPatternArray[10].concat();
+            bassPatternArray[11][14] = new Note(43, 64, 2); 
 
             // Set up the volume
-            patternSequencer.volume = 0.1;
+            bassPatternSequencer.volume = 0.2;
 
             // Set the voice
-            patternSequencer.voice = presetVoice["valsound.lead32"];
+            bassPatternSequencer.voice = presetVoice["valsound.bass1"];
+
+            //---------------------------------
+            //         LEAD TRACK
+            //---------------------------------
+            // Pattern Arrays
+            leadPatternArray[0] = new Vector.<Note>(32, true);
+            leadPatternArray[1] = new Vector.<Note>(32, true);
+            leadPatternArray[2] = new Vector.<Note>(32, true);
+            leadPatternArray[3] = new Vector.<Note>(32, true);
+            leadPatternArray[4] = new Vector.<Note>(32, true);
+            leadPatternArray[5] = new Vector.<Note>(32, true);
+            leadPatternArray[6] = new Vector.<Note>(32, true);
+            leadPatternArray[7] = new Vector.<Note>(32, true);
+            leadPatternArray[8] = new Vector.<Note>(32, true);
+            leadPatternArray[9] = new Vector.<Note>(32, true);
+            leadPatternArray[10] = new Vector.<Note>(32, true);
+            leadPatternArray[11] = new Vector.<Note>(32, true);
+
+            // Master pattern, for reference:
+            /*
+            leadPatternMaster[0] = new Note(45, 64, 1); 
+            leadPatternMaster[1] = new Note(40, 64, 1); 
+            leadPatternMaster[2] = new Note(43, 64, 1); 
+            leadPatternMaster[3] = new Note(40, 64, 1);
+            leadPatternMaster[4] = new Note(48, 64, 1);
+            leadPatternMaster[5] = new Note(40, 64, 1);
+            leadPatternMaster[6] = new Note(43, 64, 1);
+            leadPatternMaster[7] = new Note(44, 64, 1);
+            leadPatternMaster[8] = new Note(45, 64, 1);
+            leadPatternMaster[9] = new Note(43, 64, 1);
+            leadPatternMaster[10] = new Note(41, 64, 1); 
+            leadPatternMaster[11] = new Note(40, 64, 1); 
+            leadPatternMaster[12] = new Note(39, 64, 1); 
+            leadPatternMaster[13] = new Note(38, 64, 1); 
+            leadPatternMaster[14] = new Note(36, 64, 1); 
+            leadPatternMaster[15] = new Note(38, 64, 1); 
+            leadPatternMaster[16] = new Note(39, 64, 1); 
+            leadPatternMaster[17] = new Note(38, 64, 1); 
+            leadPatternMaster[18] = new Note(36, 64, 1); 
+            leadPatternMaster[19] = new Note(35, 64, 1); 
+            leadPatternMaster[20] = new Note(33, 64, 1); 
+            leadPatternMaster[21] = new Note(28, 64, 1); 
+            leadPatternMaster[22] = new Note(31, 64, 1); 
+            leadPatternMaster[23] = new Note(28, 64, 1); 
+            leadPatternMaster[24] = new Note(28, 64, 1); 
+            leadPatternMaster[25] = new Note(31, 64, 1); 
+            leadPatternMaster[26] = new Note(32, 64, 1); 
+            leadPatternMaster[27] = new Note(33, 64, 1);             
+            leadPatternMaster[28] = new Note(45, 64, 1); 
+            leadPatternMaster[29] = new Note(45, 64, 1); 
+            leadPatternMaster[30] = new Note(45, 64, 1);             
+            leadPatternMaster[31] = new Note(45, 64, 1); 
+            */
+
+            // Pattern 1
+            leadPatternArray[0][0] = new Note(45, 64, 1); 
+            leadPatternArray[0][1] = new Note(40, 64, 1); 
+
+            // Pattern 2
+            leadPatternArray[1] = leadPatternArray[0].concat();
+            leadPatternArray[1][16] = new Note(39, 64, 1); 
+            leadPatternArray[1][17] = new Note(38, 64, 1); 
+
+            // Pattern 3
+            leadPatternArray[2] = leadPatternArray[1].concat();
+            leadPatternArray[2][25] = new Note(31, 64, 1); 
+            leadPatternArray[2][26] = new Note(32, 64, 1); 
+            leadPatternArray[2][27] = new Note(33, 64, 1);             
+
+            // pattern 4
+            leadPatternArray[3] = leadPatternArray[2].concat();
+            leadPatternArray[3][8] = new Note(45, 64, 1);
+            leadPatternArray[3][9] = new Note(43, 64, 1);
+            leadPatternArray[3][10] = new Note(41, 64, 1); 
+            leadPatternArray[3][11] = new Note(40, 64, 1); 
+
+            // Pattern 5
+            leadPatternArray[4] = leadPatternArray[3].concat();
+            leadPatternArray[4][4] = new Note(48, 64, 1);
+            leadPatternArray[4][5] = new Note(40, 64, 1);
+            leadPatternArray[4][6] = new Note(43, 64, 1);
+
+            // Pattern 6
+            leadPatternArray[5] = leadPatternArray[4].concat();
+            leadPatternArray[5][12] = new Note(39, 64, 1); 
+            leadPatternArray[5][13] = new Note(38, 64, 1); 
+
+            // Pattern 7
+            leadPatternArray[6] = leadPatternArray[5].concat();
+            leadPatternArray[6][29] = new Note(45, 64, 1); 
+            leadPatternArray[6][31] = new Note(45, 64, 1); 
+
+            // Pattern 8
+            leadPatternArray[7] = leadPatternArray[6].concat();
+            leadPatternArray[7][22] = new Note(31, 64, 1); 
+            leadPatternArray[7][23] = new Note(28, 64, 1); 
+            leadPatternArray[7][24] = new Note(28, 64, 1); 
+
+            // Pattern 9
+            leadPatternArray[8] = leadPatternArray[7].concat();
+            leadPatternArray[8][18] = new Note(36, 64, 1); 
+            leadPatternArray[8][19] = new Note(35, 64, 1); 
+            leadPatternArray[8][20] = new Note(33, 64, 1); 
+
+            // Pattern 10
+            leadPatternArray[9] = leadPatternArray[8].concat();
+            leadPatternArray[9][15] = new Note(38, 64, 1); 
+            leadPatternArray[9][28] = new Note(45, 64, 1); 
+
+            // Pattern 11 
+            leadPatternArray[10] = leadPatternArray[9].concat();
+            leadPatternArray[10][2] = new Note(43, 64, 1); 
+            leadPatternArray[10][3] = new Note(40, 64, 1);
+            leadPatternArray[10][30] = new Note(45, 64, 1);             
+
+            // Pattern 12
+            leadPatternArray[11] = leadPatternArray[10].concat();
+            leadPatternArray[11][7] = new Note(44, 64, 1);
+            leadPatternArray[11][14] = new Note(36, 64, 1); 
+            leadPatternArray[11][21] = new Note(28, 64, 1); 
+
+            // Set up the volume
+            leadPatternSequencer.volume = 0.1;
+
+            // Set the voice
+            leadPatternSequencer.voice = presetVoice["valsound.lead31"];
 
             // Set up listeners for the beat
             driver.setBeatCallbackInterval(1);
             driver.addEventListener(SiONTrackEvent.BEAT, onBeat);
             driver.setTimerInterruption(1, onTimerInterruption);
 
-            // Start the rhythm loop playing (necessary for BEAT track events)
+            // Start the driver at the right tempo
             beatCounter = 0;
-            driver.play(rhythmLoop);
+            driver.play("t" + TEMPO.toString() + ";");
 		}
 		
 		public static function play (sound:String):void
@@ -206,32 +441,35 @@ package
 			}
 		}
 
-        public static function incrementMusic():void
+        public static function setMusicTensionLevel(newValue:int):void
         {
-            patternIndex++;
-            if (patternIndex >= patternArray.length)
-            {
-                patternIndex = 0;
-            }
-            patternCurrent = patternArray[patternIndex];
+            if (musicTensionLevel == newValue) return;
+            
+            musicTensionLevel = newValue;
+
             patternChanged = true;
-            trace("music incrementing to");
-            trace(patternIndex);
+            trace("music incrementing to ", musicTensionLevel);
+        }
+
+        // REMOVE:
+        public static function incrementMusicTensionLevel():void
+        {
+            musicTensionLevel++;
+            patternChanged = true;
+            trace("music incrementing to ", musicTensionLevel);
         }
 
         // Getter and setter for portamento property
-        public static function get portamento (): Boolean {return _sequencerPortamento;}
+        public static function get portamento (): Boolean {return _leadSequencerPortamento;}
 
         public static function set portamento (newValue:Boolean): void
         {
-            if (_sequencerPortamento == newValue) return;
+            if (_leadSequencerPortamento == newValue) return;
 
-            _sequencerPortamento = newValue;
+            _leadSequencerPortamento = newValue;
 
             // Set portamento
-            patternSequencer.portament = _sequencerPortamento ? 2: 0;
-
-            trace(_sequencerPortamento ? "Portamento on!" : "Portamento off!");
+            leadPatternSequencer.portament = _leadSequencerPortamento ? 1: 0;
         }
 
 		
@@ -247,10 +485,11 @@ package
 
             if (_mute)
             {
-                patternSequencer.stop();
+                stopAllDriverSequences();
+                drumsArePlaying = false;
+                bassPatternSequencer.stop();
+                leadPatternSequencer.stop();
             }
-
-            if (!_mute) patternChanged = true;
 			
 			menuItem.caption = _mute ? "Unmute" : "Mute";
 			
@@ -278,20 +517,60 @@ package
                 if (patternChanged)
                 {
                     patternChanged = false;
-                    patternSequencer.sequencer.pattern = patternCurrent;
-                    trace("pattern changed!");
 
-                    // Play if necessary and not muted
-                    if (!patternSequencer.isPlaying && !_mute)
+                    if (musicTensionLevel == -1) // no targets got yet
                     {
-                        patternSequencer.play();
-                        trace("pattern now playing");
+                        stopAllDriverSequences();
+                        currentSequence = driver.sequenceOn(new SiONData());
+                        drumsArePlaying = true;
+                        bassPatternSequencer.sequencer.pattern = new Vector.<Note>(32, false);
+                        leadPatternSequencer.sequencer.pattern = new Vector.<Note>(32, false);
+                    }
+                    else
+                    {
+                        stopAllDriverSequences();
+                        currentSequence = driver.sequenceOn(drumPatternArray[musicTensionLevel]);
+                        drumsArePlaying = true;
+                        bassPatternSequencer.sequencer.pattern = bassPatternArray[musicTensionLevel];
+                        leadPatternSequencer.sequencer.pattern = leadPatternArray[musicTensionLevel];
+                    }
+                    trace("pattern changed!");
+                }
+
+                // Play if necessary and not muted
+                if (!_mute)
+                {
+                    if (!bassPatternSequencer.isPlaying)
+                        bassPatternSequencer.play();
+
+                    if (!leadPatternSequencer.isPlaying)
+                        leadPatternSequencer.play();
+
+                    if (!drumsArePlaying)
+                    {
+                        if (musicTensionLevel == -1) // no targets got yet
+                            currentSequence = driver.sequenceOn(new SiONData());
+                        else
+                            driver.sequenceOn(drumPatternArray[musicTensionLevel]);
+                        drumsArePlaying = true;
                     }
                 }
             }
             beatCounter++;
         }
-		
+
+        private static function stopAllDriverSequences():void
+        {
+            // Waarrgh kill all the sequences
+            // I can't find a good way to know what's going on,
+            // so I'm hacking it and killing everything (it is
+            // half 3 in the AM, you know)
+            for(var i:int = 0; i < 64; i++)
+            {
+                driver.sequenceOff(i);
+            }
+        }
+
 		private static function stageAdd (e:Event):void
 		{
 			addKeyListener(e.target.stage);

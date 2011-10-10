@@ -55,7 +55,6 @@ package
 				p.spawnY = p.y;
 				
 				Audio.play("target");
-                Audio.incrementMusic();
 			}
 		}
 		
