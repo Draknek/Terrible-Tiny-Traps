@@ -25,6 +25,9 @@ package
 		
 		public var spawnX: int;
 		public var spawnY: int;
+
+        // Remove
+        //private var musicDebugPressed:Boolean = false;
 		
 		public function Player()
 		{
@@ -44,6 +47,8 @@ package
 			Input.define("L", Key.LEFT, Key.A);
 			Input.define("R", Key.RIGHT, Key.D);
 			Input.define("JUMP", Key.UP, Key.W, Key.SPACE, Key.Z, Key.X, Key.C);
+            //Remove
+            //Input.define("MUSICDEBUG", Key.N)
 		}
 		
 		public override function update (): void
@@ -78,6 +83,18 @@ package
 			
 			if (Input.check("L") || Input.pressed("L")) { dx -= 1; }
 			if (Input.check("R") || Input.pressed("R")) { dx += 1; }
+
+            // Remove
+            //if(musicDebugPressed && !Input.check("MUSICDEBUG"))
+            //    musicDebugPressed = false;
+
+            // Remove
+            //if (!musicDebugPressed && Input.check("MUSICDEBUG"))
+            //{
+            //    musicDebugPressed = true;
+            //    Audio.incrementMusicTensionLevel();
+            //}
+
 			
 			canJump = false;
 			
@@ -139,6 +156,11 @@ package
 			if (e) {
 				die();
 			}
+
+            //if (!Audio.mute)
+            //{
+            //    Audio.setFilterXY(x*10, (FP.height-y)*2);
+            //}
 		}
 		
 		public function moveX (dx: int): void
