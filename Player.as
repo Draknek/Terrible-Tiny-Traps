@@ -156,11 +156,6 @@ package
 			if (e) {
 				die();
 			}
-
-            //if (!Audio.mute)
-            //{
-            //    Audio.setFilterXY(x*10, (FP.height-y)*2);
-            //}
 		}
 		
 		public function moveX (dx: int): void
