@@ -506,6 +506,25 @@ package
             var beatIndex:int = beatCounter % 32;
             //trace(beatIndex);
 
+			// This code means that the victory music goes straight to it,
+			// even in the middle of a bar.
+			if (patternChanged)
+			{
+				if (musicTensionLevel == 6)
+				{
+					patternChanged = false;
+
+					stopAllDriverSequences();
+					driver.sequenceOn(rhythmPatternArray[musicTensionLevel]);
+					rhythmIsPlaying = true;
+					leadPatternSequencer.sequencer.pattern = leadPatternArray[musicTensionLevel];
+					// TODO: I have to align the sequencer properly, something along the lines of:
+					// leadPatternSequencer.sequencer.sequencerPointer = beatIndex;
+
+					trace("pattern changed to VICTORY");
+				}
+			}
+
             // Only do this stuff at the start of a pattern.
             if (beatIndex % PATTERN_LENGTH == 0)
             {
@@ -513,12 +532,16 @@ package
                 {
                     patternChanged = false;
 
-					stopAllDriverSequences();
-					driver.sequenceOn(rhythmPatternArray[musicTensionLevel]);
-					rhythmIsPlaying = true;
-					leadPatternSequencer.sequencer.pattern = leadPatternArray[musicTensionLevel];
+					if (musicTensionLevel != 6)
+					{
 
-					trace("pattern changed!");
+						stopAllDriverSequences();
+						driver.sequenceOn(rhythmPatternArray[musicTensionLevel]);
+						rhythmIsPlaying = true;
+						leadPatternSequencer.sequencer.pattern = leadPatternArray[musicTensionLevel];
+
+						trace("pattern changed!");
+					}
                 }
 
                 // Play if necessary and not muted
