@@ -308,7 +308,7 @@ package
 				//Logger.startPlay(Main.realism ? "Realism mode" : "", "gained focus");
 			}
 
-            Audio.mute = prevMuteState;
+            Audio.enabled = true;
 		}
 		
 		private function focusLost(e:Event = null):void
@@ -320,9 +320,7 @@ package
 				//Logger.endPlay("lost focus");
 			}
 
-            prevMuteState = Audio.mute;
-
-            Audio.mute = true;
+            Audio.enabled = false;
 		}
 		
 	}
