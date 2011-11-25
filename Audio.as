@@ -105,7 +105,7 @@ package
 
             // Pattern two:
             //              Inst|Pan|Vol|Oct|Sequence
-            rhythmMML[1] =  "%6@1    v15 o3  $c4 c4 c4 c4;";            // Kick pattern (voice 1)
+            rhythmMML[1] =  "%6@1    v15 o3  $c2 c2;";            // Kick pattern (voice 1)
             //rhythmMML[1] += "%6@3 p2 v5      $c8 c8 c8 c8 c8 c8 c8 c8;";// Closed Hat pattern (voice 3)
             rhythmMML[1] += "%6@7    v10 o2  $a1 e2 g2;";               // Bass pattern (voice 7)
 
@@ -143,17 +143,21 @@ package
 
             // Pattern six:
             //              Inst|Pan|Vol|Oct|Sequence
-            rhythmMML[5] =  "%6@1    v15 o3  $c4 r4 c4 r4;";               // Kick pattern (voice 1)
-            rhythmMML[5] += "%6@2    v15 o3  $r1^2^4^8 c8;";               // Snare pattern (voice 2)
+            rhythmMML[5] =  "%6@1    v15 o3  $c16 c16 r16 c16 r16 c16 c16 r16 c16 c16 r16 c16 r16 c16 r8;"; // Kick
+            rhythmMML[5] += "%6@2    v15 o3  $r4 c4 r4 c8 c8;";               // Snare pattern (voice 2)
             rhythmMML[5] += "%6@3 p2 v3      $c4 c4 c4 c4;";               // Closed Hat pattern (voice 3)
-            rhythmMML[5] += "%6@4 p6 v7  o3  $r1^2^4^8 c8;";               // Open Hat pattern (voice 4)
+            rhythmMML[5] += "%6@4 p6 v7  o3  $r2^4 c8;";               // Open Hat pattern (voice 4)
             rhythmMML[5] += "%6@6 p6 v2  o4  $a1 a1 g1 g1 a1 a1 g+1 g+1;"; // First organ track
             rhythmMML[5] += "%6@6 p2 v2  o5  $d1 d1 c1 c1 c1 c1 c1  c1;";  // Second organ track
             rhythmMML[5] += "%6@6    v2  o5r4$  e1 e1 d1 d1 d4 e1 e1 d1 d1 d4;";// Third organ track (overrun bar)
-            rhythmMML[5] += "%6@7    v9  o2  $[a8 r8^4]3 a8 r8<c8 d8>";    // bar one   -- Bass pattern (voice 7)
-            rhythmMML[5] +=                  "[g8 r8^4]3 g8 r8<c8 d8>";    // bar two   -- Bass pattern (voice 7)
-            rhythmMML[5] +=                  "[f8 r8^4]3 f8 r8<c8 d8>";    // bar three -- Bass pattern (voice 7)
-            rhythmMML[5] +=                  "[e8 r8^4]3 e8 r8<d8 e8>;";   // bar four  -- Bass pattern (voice 7)
+            rhythmMML[5] += "%6@7    v9  o2  $a16 g16 a16 r16^4 a16 g16 a16 r16<e16 d16 e16>r16";      // bar one-1
+            rhythmMML[5] +=                  "a16 g16 a16 r16<a8>r8 a16 g16 a16 r16<e16 d16 e16>r16";  // bar one-2
+            rhythmMML[5] +=                  "g16 f16 g16 r16^4 g16 f16 g16 r16<d16 c16 d16>r16";      // bar two-1
+            rhythmMML[5] +=                  "g16 f16 g16 r16<g8>r8 g16 f16 g16 r16<d16 c16 d16>r16";  // bar two-2
+            rhythmMML[5] +=                  "f16 e-16 f16 r16^4 f16 e-16 f16 r16<c16>b-16<c16>r16";   // bar three-1
+            rhythmMML[5] +=                  "f16 e-16 f16 r16<f8>r8 f16 e-16 f16 r16<c16>b-16<c16>r16";// bar three-2
+            rhythmMML[5] +=                  "e16 d16 e16 r16^4 e16 d16 e16 r16 b16 a16 b16 r16";      // bar four-1
+            rhythmMML[5] +=                  "e16 d16 e16 r16<e8>r8 e16 d16 e16 r16 b16 a16 b16 r16;"; // bar four-1
 
             // Pattern seven:
             //              Inst|Pan|Vol|Oct|Sequence
@@ -480,7 +484,9 @@ package
 
             // Start the driver at the right tempo
             beatCounter = 0;
-            driver.play("t" + TEMPO.toString() + ";", false);
+            driver.bpm = TEMPO;
+			if(musicTensionLevel != 0)
+				driver.play();
         }
 
         private static function stopDriver():void
@@ -507,12 +513,12 @@ package
                 {
                     patternChanged = false;
 
-                    stopAllDriverSequences();
-                    driver.sequenceOn(rhythmPatternArray[musicTensionLevel]);
-                    rhythmIsPlaying = true;
-                    leadPatternSequencer.sequencer.pattern = leadPatternArray[musicTensionLevel];
+					stopAllDriverSequences();
+					driver.sequenceOn(rhythmPatternArray[musicTensionLevel]);
+					rhythmIsPlaying = true;
+					leadPatternSequencer.sequencer.pattern = leadPatternArray[musicTensionLevel];
 
-                    trace("pattern changed!");
+					trace("pattern changed!");
                 }
 
                 // Play if necessary and not muted
