@@ -39,6 +39,7 @@ package
 			spritemap.x = -1;
 			
 			type = "player";
+
 			
 			//setHitbox(3, 4, 0, 0);
 			
@@ -68,6 +69,7 @@ package
 					} else {
 						x = spawnX;
 						y = spawnY;
+                        Audio.muteLead = false;
 					}
 				}
 				
@@ -202,6 +204,7 @@ package
 		{
 			Logger.died();
 			Audio.play("death");
+            Audio.muteLead = true;
 			deathCount = 15;
 			Level(FP.world).deaths++;
 			Level(FP.world).save(false);

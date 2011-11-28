@@ -37,6 +37,8 @@ package
         private static var musicTensionLevel:int = 0;
 
         private static var patternChanged:Boolean = false;
+        private static var rhythmToChange:Boolean = false;
+        private static var leadToUnmute:Boolean = false;
 
         private static var rhythmPatternArray:Vector.<SiONData> =
                 new Vector.<SiONData>(NUM_OF_PATTERNS, true);
@@ -127,7 +129,7 @@ package
             rhythmMML[3] += "%6@7    v10 o2  $a16<a16 r16 a16>g16<g16 r16 g16>e16<e16 r16 e-16>d16<d16>c16<c16";
             rhythmMML[3] +=                  ">a2^4 g16 g16 r16 a16";          // Bass pattern (voice 7)
             rhythmMML[3] +=                  "a16<a16 r16 a16>g16<g16 r16 g16>e16<e16 r16 e-16>d16<d16>e-16<e-16";
-            rhythmMML[3] +=                  ">e2^4 g16 g16 r16 a16;";          // Bass pattern (voice 7)
+            rhythmMML[3] +=                  ">e2 e8<e8>g8<g8>;";          // Bass pattern (voice 7)
 
             // Pattern five:
             //              Inst|Pan|Vol|Oct|Sequence
@@ -466,6 +468,23 @@ package
             trace(_mute ? "Audio muted!" : "Audio unmuted!");
 		}
 
+        public static function get muteLead ():Boolean {return leadPatternSequencer.mute;}
+
+        public static function set muteLead (newValue:Boolean):void
+        {
+            if (leadPatternSequencer.mute == newValue) return;
+
+            if (newValue == false)
+            {
+                leadToUnmute = true;
+            }
+            else
+            {
+                leadPatternSequencer.mute = newValue;
+            }
+
+        }
+
         public static function resetMusic():void
         {
             prevTargetsRemaining = -1;
@@ -506,42 +525,39 @@ package
             var beatIndex:int = beatCounter % 32;
             //trace(beatIndex);
 
-			// This code means that the victory music goes straight to it,
-			// even in the middle of a bar.
+            // When the pattern needs changing, we straightaway change the lead
+            // line, for instant feedback, and we set a flag for the rhythm
+            // to change next time the pattern loops.
 			if (patternChanged)
 			{
-				if (musicTensionLevel == 6)
-				{
-					patternChanged = false;
+                patternChanged = false;
+                rhythmToChange = true;
 
-					stopAllDriverSequences();
-					driver.sequenceOn(rhythmPatternArray[musicTensionLevel]);
-					rhythmIsPlaying = true;
-					leadPatternSequencer.sequencer.pattern = leadPatternArray[musicTensionLevel];
-					// TODO: I have to align the sequencer properly, something along the lines of:
-					// leadPatternSequencer.sequencer.sequencerPointer = beatIndex;
-
-					trace("pattern changed to VICTORY");
-				}
+                leadPatternSequencer.sequencer.pattern = leadPatternArray[musicTensionLevel];
+                trace("lead pattern changed!");
 			}
+
+            if (beatIndex % 8 == 0)
+            {
+                if (leadToUnmute)
+                {
+                    leadToUnmute = false;
+                    leadPatternSequencer.mute = false;
+                }
+            }
 
             // Only do this stuff at the start of a pattern.
             if (beatIndex % PATTERN_LENGTH == 0)
             {
-                if (patternChanged)
+                if (rhythmToChange)
                 {
-                    patternChanged = false;
+                    rhythmToChange = false;
 
-					if (musicTensionLevel != 6)
-					{
+                    stopAllDriverSequences();
+                    driver.sequenceOn(rhythmPatternArray[musicTensionLevel]);
+                    rhythmIsPlaying = true;
 
-						stopAllDriverSequences();
-						driver.sequenceOn(rhythmPatternArray[musicTensionLevel]);
-						rhythmIsPlaying = true;
-						leadPatternSequencer.sequencer.pattern = leadPatternArray[musicTensionLevel];
-
-						trace("pattern changed!");
-					}
+                    trace("rhythm pattern changed!");
                 }
 
                 // Play if necessary and not muted
