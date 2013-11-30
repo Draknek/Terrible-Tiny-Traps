@@ -12,6 +12,8 @@ package
 		
 		public static function connect (obj: DisplayObjectContainer): void
 		{
+			return;
+			
 			Mochi.connect(obj, "8a95e5563e4d35b5");
 			FGL = new GameTracker();
 			Log.View(1268, "ed5c0bfd7dc2", obj.stage.loaderInfo.loaderURL);
@@ -19,6 +21,8 @@ package
 		
 		public static function startPlay (mode:String, message:String): void
 		{
+			return;
+			
 			FGL.beginGame(0, mode, message);
 			Mochi.startPlay();
 			
@@ -31,6 +35,8 @@ package
 
 		public static function endPlay (_message:String): void
 		{
+			return;
+			
 			var total:int = 12 - FP.world.classCount(Target);
 			var deaths:int = Level(FP.world).deaths;
 			var time:int = Level(FP.world).time;
@@ -57,6 +63,8 @@ package
 		
 		public static function checkpoint(id:int, total:int):void
 		{
+			return;
+			
 			Mochi.trackEvent("gottarget", id);
 			Mochi.trackEvent("targetcount", total);
 			
@@ -86,6 +94,8 @@ package
 		
 		public static function died():void
 		{
+			return;
+			
 			/*var levelName:String = Main.realism ? "Realism mode" : "Normal mode";
 			
 			Log.LevelCounterMetric("deaths", levelName);*/
@@ -97,6 +107,8 @@ package
 		
 		public static function update():void
 		{
+			return;
+			
 			var total:int = 12 - FP.world.classCount(Target);
 			var deaths:int = Level(FP.world).deaths;
 			
