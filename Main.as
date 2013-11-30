@@ -7,6 +7,7 @@ package
 	import flash.text.*;
 	import flash.events.*;
 	import flash.display.*;
+
 	
 	//[SWF(width = "300", height = "250", backgroundColor="#FFFFFF")]
 	[SWF(width = "450", height = "294", backgroundColor="#FFFFFF")]
@@ -17,6 +18,7 @@ package
 		public static var focused: Boolean = false;
 		
 		public static var realism:Boolean = false;
+
 		
 		// Magic versioning constants
 		public static const magic:Number = 1.5; // 1.0 or 1.5
@@ -24,6 +26,8 @@ package
 		public static const showReddit:Boolean = true;
 		public static const showMoreGames:Boolean = false;
 		public static const altColours:Boolean = true;
+
+        private static var prevMuteState:Boolean = false;
 		
 		public function Main()
 		{
@@ -53,7 +57,7 @@ package
 		public static var moreGamesButton:Button;
 		public static var stats:MyTextField;
 		public static var continueStats:MyTextField;
-		
+
 		public override function init (): void
 		{
 			sitelock(["draknek.org", "reddit.com", "redditmedia.com", "redditads.s3.amazonaws.com", "flashgamelicense.com"]);
@@ -114,6 +118,7 @@ package
 				removeElements();
 				Level(FP.world).load();
 				FP.stage.focus = FP.stage;
+                Audio.enabled = true;
 				Mouse.hide();
 				Logger.startPlay("", "Continue");
 			});
@@ -124,6 +129,7 @@ package
 				Level.clearSave();
 				Level(FP.world).started = true;
 				FP.stage.focus = FP.stage;
+                Audio.enabled = true;
 				Mouse.hide();
 				Logger.startPlay("", "New game");
 			});
@@ -133,6 +139,7 @@ package
 				removeElements();
 				Level(FP.world).started = true;
 				FP.stage.focus = FP.stage;
+                Audio.enabled = true;
 				Mouse.hide();
 				Logger.startPlay("Realism mode", "");
 			});
@@ -204,6 +211,8 @@ package
 			if (continueStats.parent) {
 				continueStats.y = continueButton.y + (continueButton.height - continueStats.height)*0.5;
 			}
+
+            Audio.enabled = false;
 		}
 		
 		public static function addElements(b:Array):void
@@ -298,6 +307,8 @@ package
 				Mouse.hide();
 				//Logger.startPlay(Main.realism ? "Realism mode" : "", "gained focus");
 			}
+
+            Audio.enabled = true;
 		}
 		
 		private function focusLost(e:Event = null):void
@@ -308,6 +319,8 @@ package
 			if (FP.world is Level && Level(FP.world).started) {
 				//Logger.endPlay("lost focus");
 			}
+
+            Audio.enabled = false;
 		}
 		
 	}

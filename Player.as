@@ -25,6 +25,9 @@ package
 		
 		public var spawnX: int;
 		public var spawnY: int;
+
+        // Remove
+        //private var musicDebugPressed:Boolean = false;
 		
 		public function Player()
 		{
@@ -36,6 +39,7 @@ package
 			spritemap.x = -1;
 			
 			type = "player";
+
 			
 			//setHitbox(3, 4, 0, 0);
 			
@@ -44,6 +48,8 @@ package
 			Input.define("L", Key.LEFT, Key.A);
 			Input.define("R", Key.RIGHT, Key.D);
 			Input.define("JUMP", Key.UP, Key.W, Key.SPACE, Key.Z, Key.X, Key.C);
+            //Remove
+            //Input.define("MUSICDEBUG", Key.N)
 		}
 		
 		public override function update (): void
@@ -63,6 +69,7 @@ package
 					} else {
 						x = spawnX;
 						y = spawnY;
+                        Audio.muteLead = false;
 					}
 				}
 				
@@ -78,6 +85,18 @@ package
 			
 			if (Input.check("L") || Input.pressed("L")) { dx -= 1; }
 			if (Input.check("R") || Input.pressed("R")) { dx += 1; }
+
+            // Remove
+            //if(musicDebugPressed && !Input.check("MUSICDEBUG"))
+            //    musicDebugPressed = false;
+
+            // Remove
+            //if (!musicDebugPressed && Input.check("MUSICDEBUG"))
+            //{
+            //    musicDebugPressed = true;
+            //    Audio.incrementMusicTensionLevel();
+            //}
+
 			
 			canJump = false;
 			
@@ -91,7 +110,11 @@ package
 			
 			e = collide("solid", x, y + 1);
 			
-			if (e) { canJump = true; }
+			if (e) 
+            { 
+                canJump = true; 
+                Audio.portamento = false;
+            }
 			
 			if (dx != 0) {
 				spritemap.flipped = (dx > 0);
@@ -124,6 +147,7 @@ package
 			} else {
 				y += dy;
 				jumpCount--;
+                Audio.portamento = true;
 			}
 			
 			/*FP.camera.x = x - 80;
@@ -180,6 +204,7 @@ package
 		{
 			Logger.died();
 			Audio.play("death");
+            Audio.muteLead = true;
 			deathCount = 15;
 			Level(FP.world).deaths++;
 			Level(FP.world).save(false);

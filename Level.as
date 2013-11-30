@@ -41,6 +41,7 @@ package
 		
 		public function Level()
 		{
+
 			Input.define("MENU_ACTION", Key.SPACE, Key.Z, Key.X, Key.C, Key.ENTER);
 			
 			var level: BitmapData = FP.getBitmap(levelGfx).clone();
@@ -159,6 +160,9 @@ package
 				Mouse.show();
 				return;
 			}
+
+            // Dunno if this is the right place to put this
+            Audio.setTargetsRemaining(classCount(Target));
 			
 			if (classCount(Target) == 0) {
 				completed();
@@ -396,6 +400,7 @@ package
 		
 		public function realismDeath ():void
 		{
+
 			Mouse.show();
 			
 			Logger.endPlay("died");
@@ -447,6 +452,7 @@ package
 			}
 			
 			escapeHandler = function ():void {
+                Audio.resetMusic();
 				Main.removeElements(b);
 				FP.world = new Level();
 				Main(FP.engine).showButtons();
@@ -454,6 +460,7 @@ package
 			};
 			
 			actionHandler = function ():void {
+                Audio.resetMusic();
 				Main.removeElements(b);
 				Main.realism = true;
 				var level:Level = new Level;
