@@ -46,7 +46,7 @@ package
 					Data.writeBool("gottarget"+id, true);
 				}
 				
-				Level(FP.world).save(true, true);
+				Level(FP.world).save(true, true, this);
 				Logger.checkpoint(id, 13 - FP.world.classCount(Target));
 				
 				FP.world.remove(this);

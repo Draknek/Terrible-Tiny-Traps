@@ -36,6 +36,8 @@ package
 		public var time:int = 1;
 		public var deaths:int = 0;
 		
+		public var trails:Array = [];
+		
 		public var escapeHandler:Function;
 		public var actionHandler:Function;
 		
@@ -242,7 +244,7 @@ package
 			Data.save("tinytraps");
 		}
 		
-		public function save (changeMoving:Boolean = true, minusOneTarget:Boolean = false):void
+		public function save (changeMoving:Boolean = true, minusOneTarget:Boolean = false, target:Target = null):void
 		{
 			if (! Main.realism) {
 				Data.writeInt("playerx", player.spawnX);
@@ -252,10 +254,10 @@ package
 				Data.save("tinytraps");
 			}
 			
-			if (changeMoving) updateMoving(minusOneTarget ? 1 : 0);
+			if (changeMoving) updateMoving(minusOneTarget ? 1 : 0, target);
 		}
 		
-		public function updateMoving (minusTargets:int = 0):void
+		public function updateMoving (minusTargets:int = 0, target:Target = null):void
 		{
 			const types:Array = ["solid", "spike"];
 			
@@ -297,7 +299,34 @@ package
 				}
 			}
 			
-			for each (var e:Entity in a) e.active = true;
+			var e:Entity;
+			
+			//if (! target) {
+				for each (e in a) {
+					e.active = true;
+				}
+			/* Ehh, can't be bothered
+			} else {
+				for each (e in a) {
+					if (e.active) continue;
+					
+					var trailObject:Object = {};
+					
+					trailObject.target = e;
+					trailObject.x = target.x + 2;
+					trailObject.y = target.y + 2;
+					
+					var e2:Entity = addGraphic(new Stamp(new BitmapData(1, 1, false, Level.PLAYER)));
+					
+					e2.x = trailObject.x;
+					e2.y = trailObject.y;
+					e2.layer = -100;
+					
+					FP.tween(e2, {x: e.x, y:e.y}, 20, {tweener:this});
+					
+					e.active = true;
+				}
+			}*/
 		}
 		
 		public function completed ():void
