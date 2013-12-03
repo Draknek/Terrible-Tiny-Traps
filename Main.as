@@ -23,7 +23,7 @@ package
 		// Magic versioning constants
 		public static const magic:Number = 1.5; // 1.0 or 1.5
 		public static const header:Boolean = false;
-		public static const showReddit:Boolean = true;
+		public static const showReddit:Boolean = false;
 		public static const showMoreGames:Boolean = false;
 		public static const altColours:Boolean = true;
 
@@ -71,16 +71,19 @@ package
 			super.init();
 			
 			var ss:StyleSheet = new StyleSheet();
-			ss.parseCSS("a:hover { text-decoration: underline; } a { text-decoration: none; color: #FF8B60; }");
+			ss.parseCSS("a:hover { text-decoration: none; } a { text-decoration: underline; }");
 
 			title = new MyTextField(header ? 2*magic : 150*magic, 6*magic, "Terrible Tiny Traps", header ? "left" : "center", 20*magic);
 
 			credits = new MyTextField(header ? 2*magic : 150*magic, 32*magic, "", header ? "left" : "center", 10);
+			//credits.multiline = true;
 			credits.htmlText = 'Created by <a href="http://www.draknek.org/?ref=ttt" target="_blank">Alan Hazelden</a>';
 			
 			if (showReddit) {
 				credits.htmlText += ' for <a href="http://www.reddit.com/r/RedditGameJam/" target="_blank">Reddit Game Jam 03</a>';
 			}
+			
+			credits.htmlText += '    Music by <a href="http://runtime-audio.co.uk/" target="_blank">Paul Forey</a>';
 			
 			credits.mouseEnabled = true;
 			credits.styleSheet = ss;
