@@ -274,7 +274,7 @@ package
 				{
 					collideRectInto(type, 10, 86, 20, 100, a);
 					collideRectInto(type, 49, 76, 21, 16, a);
-					collideRectInto(type, 76, 63, 13, 18, a);
+					collideRectInto(type, 76, 57, 130, 180, a);
 					collideRectInto(type, 116, 43, 31, 35, a);
 				}
 				

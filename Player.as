@@ -172,6 +172,8 @@ package
 				if (/*canJump &&*/ ! e) {
 					x += dx;
 					y -= 1;
+					
+					jumpCount = 0;
 				} else {
 					//dx *= -1;
 				}
