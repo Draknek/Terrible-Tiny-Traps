@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+    <application xmlns="http://ns.adobe.com/air/application/2.6">
+
+    <id>org.draknek.tinytraps</id>
+    <versionNumber>1.0.0</versionNumber>
+    <filename>TerribleTinyTraps</filename>
+    <name>Terrible Tiny Traps</name>
+    <description>Pixel Platformer</description>
+    <copyright>Alan Hazelden</copyright>
+
+    <initialWindow>
+    <title>Terrible Tiny Traps</title>
+    <content>tinytraps.swf</content>
+    <systemChrome>standard</systemChrome>
+    <transparent>false</transparent>
+    <visible>true</visible>
+    <minimizable>true</minimizable>
+    <autoOrients>false</autoOrients>
+    <resizable>true</resizable>
+    <renderMode>cpu</renderMode>
+    <fullScreen>true</fullScreen>
+    <aspectRatio>landscape</aspectRatio>
+    </initialWindow>
+
+    <icon>
+    <image36x36>thumb36.png</image36x36>
+    <image48x48>thumb48.png</image48x48>
+    <image72x72>thumb72.png</image72x72>
+    </icon>
+
+    <supportedProfiles>desktop</supportedProfiles>
+    
+</application>
