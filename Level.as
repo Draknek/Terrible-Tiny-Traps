@@ -31,7 +31,7 @@ package
 		
 		public var fallingPlayer:FallingPlayer;
 		
-		public var started:Boolean = false;
+		public var started:Boolean = true;
 		
 		public var time:int = 1;
 		public var deaths:int = 0;
@@ -41,9 +41,12 @@ package
 		public var escapeHandler:Function;
 		public var actionHandler:Function;
 		
-		public function Level()
+		public var splash:Boolean;
+		
+		public function Level(_splash:Boolean = false)
 		{
-
+			splash = _splash;
+			
 			Input.define("MENU_ACTION", Key.SPACE, Key.Z, Key.X, Key.C, Key.ENTER);
 			
 			var level: BitmapData = FP.getBitmap(levelGfx).clone();
@@ -62,8 +65,8 @@ package
 			
 			player = new Player();
 			
-			player.active = false;
-			player.visible = false;
+			player.active = ! splash;
+			player.visible = ! splash;
 			
 			add(player);
 			
@@ -96,7 +99,7 @@ package
 						add(new Spike(x, y));
 					}
 					else if (colour == 0xFF00FF) {
-						if(! fallingPlayer) {
+						if(splash && ! fallingPlayer) {
 							add(fallingPlayer = new FallingPlayer(x, y));
 						}
 						
@@ -156,7 +159,9 @@ package
 			if (Input.pressed(Key.ESCAPE)) {
 				Logger.endPlay("pressed escape");
 				save(false);
-				FP.world = new Level();
+				var bgLevel:Level = new Level;
+				bgLevel.started = false;
+				FP.world = bgLevel;
 				Main(FP.engine).showButtons();
 				FP.stage.focus = FP.stage;
 				Mouse.show();
@@ -175,7 +180,7 @@ package
 			super.update();
 			
 			if (fallingPlayer) {
-				if (Input.pressed(-1)) {
+				if (Input.pressed(-1) && fallingPlayer.world) {
 					remove(fallingPlayer);
 				}
 			} else {
@@ -194,12 +199,14 @@ package
 				Draw.rect(0, 28, 150, 125, 0xFFFFFF, 0.9);
 			}
 			
+			if (started) return;
+			
 			Main.clickText.visible = (started && ! Main.focused);
 		}
 		
 		public function load ():void
 		{
-			remove(fallingPlayer);
+			if (fallingPlayer) remove(fallingPlayer);
 			
 			Data.load("tinytraps");
 			player.x = player.spawnX = Data.readInt("playerx", player.x);
@@ -414,7 +421,9 @@ package
 			escapeHandler = function ():void {
 				Main.removeElements(b);
 				
-				FP.world = new Level();
+				var bgLevel:Level = new Level;
+				bgLevel.started = false;
+				FP.world = bgLevel;
 				Main(FP.engine).showButtons();
 				FP.stage.focus = FP.stage;
 			};
@@ -483,7 +492,9 @@ package
 			escapeHandler = function ():void {
                 Audio.resetMusic();
 				Main.removeElements(b);
-				FP.world = new Level();
+				var bgLevel:Level = new Level;
+				bgLevel.started = false;
+				FP.world = bgLevel;
 				Main(FP.engine).showButtons();
 				FP.stage.focus = FP.stage;
 			};

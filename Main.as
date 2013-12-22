@@ -15,6 +15,8 @@ package
 	{
 		public static var clickText: TextField;
 		
+		public static var loadingText: TextField;
+		
 		public static var focused: Boolean = false;
 		
 		public static var realism:Boolean = false;
@@ -23,30 +25,31 @@ package
 		// Magic versioning constants
 		public static const magic:Number = 1.5; // 1.0 or 1.5
 		public static const header:Boolean = false;
+		public static const headerSize:int = header ? 0 : 27;
 		public static const showReddit:Boolean = false;
 		public static const showMoreGames:Boolean = false;
 		public static const altColours:Boolean = true;
 
         private static var prevMuteState:Boolean = false;
+        
+		public var coverHeader:Bitmap;
 		
 		public function Main()
 		{
 			super(150, 125, 10, true);
 			
-			Audio.init(this);
-			
-			FP.world = new Level();
+			FP.world = new Level(true);
 			FP.screen.color = Level.BLANK;
 			FP.screen.scale = magic * 2;
 			
-			this.y = header ? 0 : -54*magic;
-		}
-		
-		public override function setStageProperties():void
-		{
-			super.setStageProperties();
-			stage.align = StageAlign.TOP;
-			stage.scaleMode = StageScaleMode.SHOW_ALL;
+			this.y = -headerSize*2*magic;
+			
+			coverHeader = new Bitmap(new BitmapData(1, 1, false, 0xFFFFFF));
+			
+			addChild(coverHeader);
+			
+			coverHeader.scaleX = FP.width * FP.screen.scale;
+			coverHeader.scaleY = headerSize * FP.screen.scale;
 		}
 		
 		public static var title: MyTextField;
@@ -66,10 +69,56 @@ package
 			FP.stage.addEventListener(Event.ACTIVATE, focusGain);
 			FP.stage.addEventListener(Event.DEACTIVATE, focusLost);
 			
-			FP.screen.refresh();
-			
 			super.init();
 			
+			render();
+			
+			stage.scaleMode = StageScaleMode.NO_SCALE;
+			
+			loadingText = new MyTextField(FP.width*FP.screen.scale*0.5, 0, "Loading", "center", 20);
+			
+			loadingText.y = (FP.height-headerSize)*FP.screen.scale*0.5 - loadingText.textHeight*0.5 + headerSize*FP.screen.scale;
+			
+			addChild(loadingText);
+			
+			//doMenu();
+		}
+		
+		public override function update ():void
+		{
+			stage.scaleMode = StageScaleMode.NO_SCALE;
+			
+			var w:int = FP.width;
+			var h:int = FP.height - headerSize;
+			var scaleX:int = Math.floor(stage.stageWidth / w);
+			var scaleY:int = Math.floor(stage.stageHeight / h);
+			
+			var scale:int = Math.min(scaleX, scaleY);
+			
+			this.scaleX = this.scaleY = scale / magic / 2;
+			
+			w *= scale;
+			h *= scale;
+			
+			this.x = (stage.stageWidth - w) * 0.5;
+			this.y = (stage.stageHeight - h) * 0.5 - headerSize*scale;
+			
+			coverHeader.scaleX = FP.width * FP.screen.scale;
+			coverHeader.scaleY = headerSize * FP.screen.scale;
+			
+			if (loadingText) {
+				Audio.init(this);
+				
+				removeChild(loadingText);
+				
+				loadingText = null;
+			}
+			
+			super.update();
+		}
+		
+		public function doMenu ():void
+		{
 			var ss:StyleSheet = new StyleSheet();
 			ss.parseCSS("a:hover { text-decoration: none; } a { text-decoration: underline; }");
 
@@ -120,6 +169,8 @@ package
 				Main.realism = false;
 				removeElements();
 				Level(FP.world).load();
+				Level(FP.world).player.active = true;
+				Level(FP.world).fallingPlayer = null;
 				FP.stage.focus = FP.stage;
                 Audio.enabled = true;
 				Mouse.hide();
@@ -131,6 +182,8 @@ package
 				removeElements();
 				Level.clearSave();
 				Level(FP.world).started = true;
+				Level(FP.world).player.active = true;
+				Level(FP.world).fallingPlayer = null;
 				FP.stage.focus = FP.stage;
                 Audio.enabled = true;
 				Mouse.hide();
@@ -141,6 +194,8 @@ package
 				Main.realism = true;
 				removeElements();
 				Level(FP.world).started = true;
+				Level(FP.world).player.active = true;
+				Level(FP.world).fallingPlayer = null;
 				FP.stage.focus = FP.stage;
                 Audio.enabled = true;
 				Mouse.hide();
@@ -273,7 +328,10 @@ package
 			var url:String = FP.stage.loaderInfo.url;
 			var startCheck:int = url.indexOf('://' ) + 3;
 			
-			if (url.substr(0, startCheck) == 'file://') return true;
+			if (url.substr(0, 7) == 'file://') return true;
+			if (url.substr(0, 5) == 'app:/') {
+				return true;
+			}
 			
 			var domainLen:int = url.indexOf('/', startCheck) - startCheck;
 			var host:String = url.substr(startCheck, domainLen);
@@ -306,7 +364,7 @@ package
 		private function focusGain(e:Event = null):void
 		{
 			focused = true;
-			if (FP.world is Level && Level(FP.world).started) {
+			if (FP.world is Level && Level(FP.world).started && ! Level(FP.world).splash) {
 				Mouse.hide();
 				//Logger.startPlay(Main.realism ? "Realism mode" : "", "gained focus");
 			}

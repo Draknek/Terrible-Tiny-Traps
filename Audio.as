@@ -59,9 +59,15 @@ package
 		private static var _mute:Boolean = false;
 		private static var so:SharedObject;
 		private static var menuItem:ContextMenuItem;
+        
+        public static var hasInited:Boolean;
 		
 		public static function init (o:InteractiveObject):void
 		{
+            if (hasInited) return;
+            
+            hasInited = true;
+            
 			// Setup
 
 			so = SharedObject.getLocal("audio", "/");
@@ -342,7 +348,7 @@ package
 		
 		public static function play (sound:String):void
 		{
-			if (! _mute) {
+			if (! _mute && Audio[sound]) {
 				Audio[sound].playCachedMutation();
 			}
 		}
