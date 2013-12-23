@@ -4,6 +4,7 @@ package
 	import net.flashpunk.graphics.*;
 	import net.flashpunk.masks.*;
 	import net.flashpunk.utils.*;
+	import net.flashpunk.tweens.misc.Alarm;
 	
 	public class FallingPlayer extends Entity
 	{
@@ -51,13 +52,17 @@ package
 		public override function removed (): void
 		{
 			Level(FP.world).player.visible = true;
-			Level(FP.world).started = false;
+			//Level(FP.world).started = false;
 			//Level(FP.world).player.active = true;
 			//Level(FP.world).fallingPlayer = null;
 			
 			Audio.init(FP.engine);
 			
-			Main(FP.engine).doMenu();
+			if (Level(FP.world).started) {
+				FP.world.addTween(new Alarm(3, Main(FP.engine).doMenu, Tween.ONESHOT), true);
+			} else {
+				Main(FP.engine).doMenu();
+			}
 		}
 		
 		public function moveX (dx: int): void

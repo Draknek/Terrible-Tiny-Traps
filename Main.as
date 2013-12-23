@@ -124,6 +124,8 @@ package
 		
 		public function doMenu ():void
 		{
+			Level(FP.world).started = false;
+			
 			var ss:StyleSheet = new StyleSheet();
 			ss.parseCSS("a:hover { text-decoration: none; } a { text-decoration: underline; }");
 

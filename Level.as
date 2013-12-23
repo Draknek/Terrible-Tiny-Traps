@@ -181,6 +181,7 @@ package
 			
 			if (fallingPlayer) {
 				if (Input.pressed(-1) && fallingPlayer.world) {
+					started = false;
 					remove(fallingPlayer);
 				}
 			} else {
