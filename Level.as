@@ -154,7 +154,7 @@ package
 				return;
 			}
 			
-			if (! started || ! Main.focused) { return; }
+			if (! started || (! splash && ! Main.focused)) { return; }
 			
 			if (Input.pressed(Key.ESCAPE)) {
 				Logger.endPlay("pressed escape");
@@ -195,11 +195,11 @@ package
 		{
 			super.render();
 			
-			if (! started || ! Main.focused) {
+			if (! started || (! splash && ! Main.focused)) {
 				Draw.rect(0, 28, 150, 125, 0xFFFFFF, 0.9);
 			}
 			
-			if (started) return;
+			if (started || splash) return;
 			
 			Main.clickText.visible = (started && ! Main.focused);
 		}

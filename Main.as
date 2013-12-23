@@ -38,7 +38,10 @@ package
 		{
 			super(150, 125, 10, true);
 			
-			FP.world = new Level(true);
+			var level:Level = new Level(true);
+			
+			FP.world = level;
+			level.started = false;
 			FP.screen.color = Level.BLANK;
 			FP.screen.scale = magic * 2;
 			
@@ -112,6 +115,8 @@ package
 				removeChild(loadingText);
 				
 				loadingText = null;
+				
+				Level(FP.world).started = true;
 			}
 			
 			super.update();
