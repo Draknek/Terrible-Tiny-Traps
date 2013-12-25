@@ -49,6 +49,15 @@ package
 			}
 		}
 		
+		public override function render ():void
+		{
+			super.render();
+			
+			if (world.collidePoint("solid", x, y+2)) FP.buffer.setPixel(x, y+2, Level.SOLID);
+			if (world.collidePoint("solid", x+4, y+2)) FP.buffer.setPixel(x+4, y+2, Level.SOLID);
+			if (world.collidePoint("solid", x+2, y+4)) FP.buffer.setPixel(x+2, y+4, Level.SOLID);
+		}
+		
 		public override function removed (): void
 		{
 			Level(FP.world).player.visible = true;

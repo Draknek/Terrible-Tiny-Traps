@@ -29,6 +29,8 @@ package
 		
 		public var player: Player;
 		
+		public var taunter:Taunter;
+		
 		public var fallingPlayer:FallingPlayer;
 		
 		public var started:Boolean = true;
@@ -70,6 +72,11 @@ package
 			
 			add(player);
 			
+			if (splash) {
+				taunter = new Taunter();
+				add(taunter);
+			}
+			
 			var checkpointGrid: Grid = new Grid(level.width, level.height, 1, 1);
 			
 			var targetID:int = 0;
@@ -99,10 +106,6 @@ package
 						add(new Spike(x, y));
 					}
 					else if (colour == 0xFF00FF) {
-						if(splash && ! fallingPlayer) {
-							add(fallingPlayer = new FallingPlayer(x, y));
-						}
-						
 						targetID++;
 						
 						add(new Target(x - 2, y, targetID));
@@ -114,6 +117,11 @@ package
 						level.setPixel(x-1, y+3, 0xFFFFFF);
 						level.setPixel(x-2, y+2, 0xFFFFFF);
 						level.setPixel(x-1, y+1, 0xFFFFFF);
+					} else if (colour == 0xff1b2e) {
+						if (taunter) {
+							taunter.x = x - 2;
+							taunter.y = y - 3;
+						}
 					} else {
 						level.setPixel(x, y, colour | 0xFF000000);
 						level.floodFill(x, y, SPECIAL | 0xFF000000);

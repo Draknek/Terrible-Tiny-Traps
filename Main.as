@@ -126,6 +126,8 @@ package
 		{
 			Level(FP.world).started = false;
 			
+			FP.world.remove(Level(FP.world).taunter);
+			
 			var ss:StyleSheet = new StyleSheet();
 			ss.parseCSS("a:hover { text-decoration: none; } a { text-decoration: underline; }");
 
