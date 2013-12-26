@@ -10,6 +10,11 @@ package
 		public var frame: int = 0;
 		public var id:int = 0;
 		
+		[Embed(source = 'door.png')]
+		public static var doorGfx: Class;
+		
+		public var door:Spritemap;
+		
 		public function Target(_x: Number, _y: Number, _i:int)
 		{
 			x = _x;
@@ -17,6 +22,18 @@ package
 			id = _i;
 			
 			type = "target";
+			
+			if (id == 1) {
+				door = new Spritemap(doorGfx, 5, 6);
+				
+				door.color = Level.PLAYER;
+				
+				graphic = door;
+				
+				setHitbox(6, 6);
+				
+				return;
+			}
 			
 			var grid: Grid = new Grid(5, 5, 1, 1);
 			
@@ -40,6 +57,27 @@ package
 			
 			var p: Player = collide("player", x, y) as Player;
 			
+			var targetCount:int = FP.world.classCount(Target);
+			
+			if (id == 1 && targetCount != 1) {
+				if (Level(FP.world).fallingPlayer) {
+					door.frame = 3;
+				} else {
+					door.frame = 0;
+				}
+				
+				if (p) {
+					p.x += 1;
+				}
+				return;
+			} else if (id == 1) {
+				if (Level(FP.world).fallingPlayer) {
+					door.frame = 3;
+				} else if (frame == 7 && door.frame < 3) {
+					door.frame++;
+				}
+			}
+			
 			if (p)
 			{
 				if (! Main.realism) {
@@ -47,9 +85,14 @@ package
 				}
 				
 				Level(FP.world).save(true, true, this);
-				Logger.checkpoint(id, 13 - FP.world.classCount(Target));
+				Logger.checkpoint(id, 13 - targetCount);
 				
-				FP.world.remove(this);
+				if (id == 1) {
+					active = false;
+					type = "exit";
+				} else {
+					FP.world.remove(this);
+				}
 				
 				p.spawnX = p.x;
 				p.spawnY = p.y;
@@ -60,6 +103,11 @@ package
 		
 		public override function render (): void
 		{
+			if (id == 1) {
+				super.render();
+				return;
+			}
+			
 			for (var i: int = 0; i < 8; i++) {
 				if (i == frame) { continue; }
 				

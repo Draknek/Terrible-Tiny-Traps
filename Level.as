@@ -31,6 +31,8 @@ package
 		
 		public var taunter:Taunter;
 		
+		public var door:Target;
+		
 		public var fallingPlayer:FallingPlayer;
 		
 		public var started:Boolean = true;
@@ -108,7 +110,13 @@ package
 					else if (colour == 0xFF00FF) {
 						targetID++;
 						
-						add(new Target(x - 2, y, targetID));
+						var target:Target = new Target(x - 2, y, targetID);
+						
+						add(target);
+						
+						if (! door) {
+							door = target;
+						}
 						
 						level.setPixel(x+1, y+1, 0xFFFFFF);
 						level.setPixel(x+2, y+2, 0xFFFFFF);
@@ -144,6 +152,8 @@ package
 			}
 			
 			add(new Checkpoint(checkpointGrid));
+			
+			if (splash) door.door.frame = 3;
 		}
 		
 		public override function update (): void
@@ -177,9 +187,9 @@ package
 			}
 
             // Dunno if this is the right place to put this
-            Audio.setTargetsRemaining(classCount(Target));
+            Audio.setTargetsRemaining(typeCount("target"));
 			
-			if (classCount(Target) == 0) {
+			if (typeCount("target") == 0) {
 				completed();
 				
 				return;
@@ -279,7 +289,7 @@ package
 			
 			var a:Array = [];
 			
-			var targetCount: int = classCount(Target) - minusTargets;
+			var targetCount: int = typeCount("target") - minusTargets;
 			
 			for each (var type:String in types)
 			{
@@ -457,7 +467,7 @@ package
 			var secs:Number = (time % 600) / 10.0;
 			//var timeString:String = mins + ":" + (secs < 10 ? "0" : "") + secs;
 			var timeString:String = mins + " min " + secs + "s";
-			var targetCount:int = (12 - classCount(Target));
+			var targetCount:int = (12 - typeCount("target"));
 			var targetString:String = targetCount + " checkpoints";
 			if (targetCount == 0) targetString = "no checkpoints";
 			else if (targetCount == 1) targetString = "one checkpoint";

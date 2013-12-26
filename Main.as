@@ -126,6 +126,8 @@ package
 		{
 			Level(FP.world).started = false;
 			
+			Level(FP.world).door.door.frame = 0;
+			
 			FP.world.remove(Level(FP.world).taunter);
 			
 			var ss:StyleSheet = new StyleSheet();
