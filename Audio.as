@@ -391,7 +391,7 @@ package
                     newMusicTensionLevel = 6;
                     break;
             }
-
+            
             if (musicTensionLevel == newMusicTensionLevel) return;
 
             musicTensionLevel = newMusicTensionLevel;

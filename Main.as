@@ -181,6 +181,7 @@ package
 				Level(FP.world).player.active = true;
 				Level(FP.world).fallingPlayer = null;
 				FP.stage.focus = FP.stage;
+				Audio.resetMusic();
                 Audio.enabled = true;
 				Mouse.hide();
 				Logger.startPlay("", "Continue");
@@ -194,6 +195,7 @@ package
 				Level(FP.world).player.active = true;
 				Level(FP.world).fallingPlayer = null;
 				FP.stage.focus = FP.stage;
+				Audio.resetMusic();
                 Audio.enabled = true;
 				Mouse.hide();
 				Logger.startPlay("", "New game");
@@ -206,6 +208,7 @@ package
 				Level(FP.world).player.active = true;
 				Level(FP.world).fallingPlayer = null;
 				FP.stage.focus = FP.stage;
+				Audio.resetMusic();
                 Audio.enabled = true;
 				Mouse.hide();
 				Logger.startPlay("Realism mode", "");
