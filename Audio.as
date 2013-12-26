@@ -395,9 +395,12 @@ package
             if (musicTensionLevel == newMusicTensionLevel) return;
 
             musicTensionLevel = newMusicTensionLevel;
-
-            if (!driver.isPlaying)
+            
+            if (musicTensionLevel == 0) {
+                stopDriver();
+            } else if (!driver.isPlaying) {
                 startDriver();
+            }
 
             patternChanged = true;
             trace("music incrementing to ", musicTensionLevel);
