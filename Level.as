@@ -366,7 +366,7 @@ package
 			var secs:Number = (time % 600) / 10.0;
 			//var timeString:String = mins + ":" + (secs < 10 ? "0" : "") + secs;
 			var timeString:String = mins + " min " + secs + "s";
-			var deathString:String = "with " + deaths + " deaths";
+			var deathString:String = "with " + deaths + " deaths.";
 			if (deaths == 1) { deathString = "with only one death!" }
 			else if (deaths == 0) { deathString = "without dying!" }
 			var stats:MyTextField = new MyTextField(145*Main.magic, 120, "You mastered the traps\nin " + timeString + "\n" + deathString, "center", 20);
@@ -415,7 +415,7 @@ package
 			
 			if (deathString.substr(-1) != "!") deathString += "!";
 			
-			var tweetString:String = "I just mastered the Terrible Tiny Traps in " + timeString + " " + deathString + " Take the challenge: http://bit.ly/cyf7Cu";
+			var tweetString:String = "I just mastered the Terrible Tiny Traps in " + timeString + " " + deathString + " Take the challenge: http://www.draknek.org/games/tinytraps/";
 			
 			var tweetButton:TweetButton = new TweetButton(tweetString);
 			
