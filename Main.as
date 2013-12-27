@@ -85,6 +85,8 @@ package
 			addChild(loadingText);
 			
 			//doMenu();
+			
+			FP.stage.addEventListener(KeyboardEvent.KEY_DOWN, keyListener, false, 0, true);
 		}
 		
 		public override function setStageProperties():void
@@ -119,6 +121,19 @@ package
 			
 			coverHeader.scaleX = FP.width * FP.screen.scale;
 			coverHeader.scaleY = headerSize * FP.screen.scale;
+		}
+		
+		// Called on key down: stops escape leaving fullscreen.
+		private function keyListener(e:KeyboardEvent):void {
+			e.preventDefault();
+			
+			if (e.keyCode == Key.F || e.keyCode == Key.F11 || (e.keyCode == Key.ENTER && e.altKey)) {
+				if (stage.displayState == StageDisplayState.NORMAL) {
+					stage.displayState = StageDisplayState["FULL_SCREEN_INTERACTIVE"];
+				} else {
+					stage.displayState = StageDisplayState.NORMAL;
+				}
+			}
 		}
 		
 		public override function update ():void
