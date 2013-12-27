@@ -99,11 +99,16 @@ package
 		
 		public override function setStageProperties():void
 		{
+			Data.load("tinytraps");
+			
 			stage.frameRate = FP.assignedFrameRate;
 			stage.align = StageAlign.TOP_LEFT;
 			stage.quality = StageQuality.HIGH;
 			stage.scaleMode = StageScaleMode.NO_SCALE;
-			stage.displayState = StageDisplayState["FULL_SCREEN_INTERACTIVE"];
+			
+			if (! Data.readInt("windowed", 0)) {
+				stage.displayState = StageDisplayState["FULL_SCREEN_INTERACTIVE"];
+			}
 			
 			doSizing();
 		}
@@ -141,6 +146,10 @@ package
 				} else {
 					stage.displayState = StageDisplayState.NORMAL;
 				}
+				
+				Data.writeInt("windowed", (stage.displayState == StageDisplayState.NORMAL) ? 1 : 0);
+				
+				Data.save("tinytraps");
 			}
 		}
 		
@@ -201,8 +210,6 @@ package
 			}
 			
 			addChild(clickText);
-			
-			Data.load("tinytraps");
 			
 			newGameButton = new Button("New Game", 20);
 			newGameButton.x = 150*magic - newGameButton.width*0.5;
