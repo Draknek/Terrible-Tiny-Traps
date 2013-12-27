@@ -1,6 +1,7 @@
 package
 {
 	import net.flashpunk.*;
+	import net.flashpunk.graphics.*;
 	import net.flashpunk.utils.*;
 	
 	import flash.ui.*;
@@ -35,6 +36,14 @@ package
         private static var prevMuteState:Boolean = false;
         
 		public var coverHeader:Bitmap;
+		
+		[Embed(source = 'speech.png')]
+		public static var speechGfx: Class;
+		
+		public var speechBubble:Entity;
+		
+		public var speech1:MyTextField;
+		public var speech2:MyTextField;
 		
 		public function Main()
 		{
@@ -85,6 +94,8 @@ package
 			loadingText.y = (FP.height-headerSize)*FP.screen.scale*0.5 - loadingText.textHeight*0.5 + headerSize*FP.screen.scale;
 			
 			addChild(loadingText);
+			
+			title = new MyTextField(header ? 2*magic : 150*magic, 6*magic, "Terrible Tiny Traps", header ? "left" : "center", 20*magic);
 			
 			//doMenu();
 			
@@ -173,6 +184,19 @@ package
 			loadingText = null;
 			
 			Level(FP.world).started = true;
+			
+			speechBubble = FP.world.addGraphic(new Stamp(speechGfx), -100);
+			
+			speechBubble.visible = false;
+			
+			speech1 = new MyTextField(225, 92, "Hahaha!", "center", 20);
+			speech2 = new MyTextField(225, 92, "You'll never escape from my", "center", 20);
+			
+			addChild(speech1);
+			addChild(speech2);
+			
+			speech1.visible = false;
+			speech2.visible = false;
 		}
 		
 		public function doMenu ():void
@@ -182,11 +206,13 @@ package
 			Level(FP.world).door.door.frame = 0;
 			
 			FP.world.remove(Level(FP.world).taunter);
+			FP.world.remove(speechBubble);
+			
+			removeChild(speech1);
+			removeChild(speech2);
 			
 			var ss:StyleSheet = new StyleSheet();
 			ss.parseCSS("a:hover { text-decoration: none; } a { text-decoration: underline; }");
-
-			title = new MyTextField(header ? 2*magic : 150*magic, 6*magic, "Terrible Tiny Traps", header ? "left" : "center", 20*magic);
 
 			credits = new MyTextField(header ? 2*magic : 150*magic, 32*magic, "", header ? "left" : "center", 10);
 			//credits.multiline = true;

@@ -38,6 +38,22 @@ package
 			if (counter == 5) {
 				fallingPlayer.active = true;
 			}
+			
+			if (counter == 20) {
+				Main(FP.engine).speechBubble.visible = true;
+				Main(FP.engine).speech1.visible = true;
+			}
+			
+			if (counter == 40) {
+				Main(FP.engine).speech1.visible = false;
+				Main(FP.engine).speech2.visible = true;
+			}
+			
+			if (counter == 60) {
+				Main(FP.engine).speech2.visible = false;
+				Main.title.y = (4 + 54)*Main.magic;
+				FP.engine.addChild(Main.title);
+			}
 		}
 	}
 }
