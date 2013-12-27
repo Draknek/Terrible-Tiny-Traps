@@ -87,7 +87,18 @@ package
 			//doMenu();
 		}
 		
-		public override function update ():void
+		public override function setStageProperties():void
+		{
+			stage.frameRate = FP.assignedFrameRate;
+			stage.align = StageAlign.TOP_LEFT;
+			stage.quality = StageQuality.HIGH;
+			stage.scaleMode = StageScaleMode.NO_SCALE;
+			//stage.displayState = StageDisplayState["FULL_SCREEN_INTERACTIVE"];
+			
+			doSizing();
+		}
+		
+		public function doSizing ():void
 		{
 			stage.scaleMode = StageScaleMode.NO_SCALE;
 			
@@ -108,6 +119,11 @@ package
 			
 			coverHeader.scaleX = FP.width * FP.screen.scale;
 			coverHeader.scaleY = headerSize * FP.screen.scale;
+		}
+		
+		public override function update ():void
+		{
+			doSizing();
 			
 			if (loadingText) {
 				Audio.init(this);
