@@ -396,10 +396,12 @@ package
 			focused = true;
 			if (FP.world is Level && Level(FP.world).started && ! Level(FP.world).splash) {
 				Mouse.hide();
+				
 				//Logger.startPlay(Main.realism ? "Realism mode" : "", "gained focus");
 			}
-
-            Audio.enabled = true;
+			
+			Audio.resetMusic();
+			Audio.enabled = true;
 		}
 		
 		private function focusLost(e:Event = null):void
