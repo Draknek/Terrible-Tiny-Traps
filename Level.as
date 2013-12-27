@@ -490,9 +490,11 @@ package
 			
 			var bestTargets:int = Data.readInt("bestrealismtargets", 0);
 			
+			var bestRealismTime:int = Data.readInt("bestrealismtime", -1);
+			
 			var isNewRecord:Boolean = false;
 			
-			if (targetCount > bestTargets) {
+			if (bestRealismTime == -1 && targetCount > bestTargets) {
 				Data.writeInt("bestrealismtargets", targetCount);
 				isNewRecord = true;
 			}
