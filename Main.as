@@ -201,6 +201,7 @@ package
 		
 		public function doMenu ():void
 		{
+			Level(FP.world).splash = false;
 			Level(FP.world).started = false;
 			
 			Level(FP.world).door.door.frame = 0;
