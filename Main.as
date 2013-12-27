@@ -7,6 +7,8 @@ package
 	import flash.text.*;
 	import flash.events.*;
 	import flash.display.*;
+	
+	import flash.utils.*;
 
 	
 	//[SWF(width = "300", height = "250", backgroundColor="#FFFFFF")]
@@ -87,6 +89,12 @@ package
 			//doMenu();
 			
 			FP.stage.addEventListener(KeyboardEvent.KEY_DOWN, keyListener, false, 0, true);
+			
+			FP.stage.addEventListener(Event.RESIZE, doSizing);
+			
+			var t:Timer = new Timer(150, 1);
+			t.addEventListener(TimerEvent.TIMER, loadAudio);
+			t.start();
 		}
 		
 		public override function setStageProperties():void
@@ -95,12 +103,12 @@ package
 			stage.align = StageAlign.TOP_LEFT;
 			stage.quality = StageQuality.HIGH;
 			stage.scaleMode = StageScaleMode.NO_SCALE;
-			//stage.displayState = StageDisplayState["FULL_SCREEN_INTERACTIVE"];
+			stage.displayState = StageDisplayState["FULL_SCREEN_INTERACTIVE"];
 			
 			doSizing();
 		}
 		
-		public function doSizing ():void
+		public function doSizing (e:* = null):void
 		{
 			stage.scaleMode = StageScaleMode.NO_SCALE;
 			
@@ -136,21 +144,26 @@ package
 			}
 		}
 		
-		public override function update ():void
+		public function loadAudio (e:*):void
 		{
 			doSizing();
 			
-			if (loadingText) {
-				Audio.init(this);
-				
-				removeChild(loadingText);
-				
-				loadingText = null;
-				
-				Level(FP.world).started = true;
-			}
+			Audio.init(this);
 			
-			super.update();
+			var t:Timer = new Timer(50, 1);
+			t.addEventListener(TimerEvent.TIMER, actuallyStart);
+			t.start();
+		}
+		
+		public function actuallyStart (e:*):void
+		{
+			doSizing();
+			
+			removeChild(loadingText);
+			
+			loadingText = null;
+			
+			Level(FP.world).started = true;
 		}
 		
 		public function doMenu ():void
