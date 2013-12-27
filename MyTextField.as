@@ -5,7 +5,7 @@ package
 	
 	public class MyTextField extends TextField
 	{
-		[Embed(source="MODENINE.TTF", fontName='modenine', mimeType='application/x-font')]
+		[Embed(source="MODENINE.TTF", fontName='modenine', embedAsCFF="false", mimeType='application/x-font')]
 		public static var defaultFontSrc : Class;
 		
 		public static var defaultFont : Font = new defaultFontSrc();
