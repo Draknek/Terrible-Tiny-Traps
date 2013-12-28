@@ -79,7 +79,7 @@ package
 
 		public override function init (): void
 		{
-			sitelock(["draknek.org", "reddit.com", "redditmedia.com", "redditads.s3.amazonaws.com", "flashgamelicense.com"]);
+			sitelock(["draknek.org", "draknek.dev", "reddit.com", "redditmedia.com", "redditads.s3.amazonaws.com", "flashgamelicense.com"]);
 			
 			FP.stage.addEventListener(MouseEvent.MOUSE_DOWN, mouseClick);
 			FP.stage.addEventListener(Event.ACTIVATE, focusGain);
