@@ -21,6 +21,8 @@ package
 		
 		public var onFloor:Boolean = false;
 		
+		public var noisy:Boolean = false;
+		
 		public function FallingPlayer(_x:int, _y:int)
 		{
 			x = _x;
@@ -31,6 +33,12 @@ package
 			spritemap.color = Level.PLAYER;
 			
 			setHitbox(3, 3, -1, -1);
+			
+			if (Main.onWeb) {
+				noisy = false;
+			} else {
+				noisy = true;
+			}
 		}
 		
 		public override function update (): void
@@ -82,7 +90,7 @@ package
 			
 			if (e) {
 				this.dx *= -1;
-				Audio.play("bounce");
+				if (noisy) Audio.play("bounce");
 			} else {
 				x += dx;
 			}
@@ -99,7 +107,7 @@ package
 			if (e) {
 				if (!onFloor) {
 					onFloor = true;
-					Audio.play("bounce");
+					if (noisy) Audio.play("bounce");
 				}
 				/*if (dy == 2) {
 					moveY(1);

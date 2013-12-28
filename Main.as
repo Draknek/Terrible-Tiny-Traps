@@ -45,6 +45,8 @@ package
 		public var speech1:MyTextField;
 		public var speech2:MyTextField;
 		
+		public static var onWeb:Boolean;
+		
 		public function Main()
 		{
 			super(150, 125, 10, true);
@@ -110,6 +112,10 @@ package
 		
 		public override function setStageProperties():void
 		{
+			var url:String = FP.stage.loaderInfo.url;
+			
+			onWeb = (url.substr(0, 7) == 'http://' || url.substr(0, 8) == 'https://');
+			
 			Data.load("tinytraps");
 			
 			stage.frameRate = FP.assignedFrameRate;
@@ -117,7 +123,7 @@ package
 			stage.quality = StageQuality.HIGH;
 			stage.scaleMode = StageScaleMode.NO_SCALE;
 			
-			if (! Data.readInt("windowed", 0)) {
+			if (! onWeb && ! Data.readInt("windowed", 0)) {
 				stage.displayState = StageDisplayState["FULL_SCREEN_INTERACTIVE"];
 			}
 			
@@ -177,6 +183,13 @@ package
 		
 		public function actuallyStart (e:*):void
 		{
+			if (onWeb) {
+				if (loadingText.text == "Loading") {
+					loadingText.text = "Click to start"
+					return;
+				}
+			}
+			
 			doSizing();
 			
 			removeChild(loadingText);
@@ -464,6 +477,10 @@ package
 			
 			Audio.resetMusic();
 			Audio.enabled = true;
+			
+			if (loadingText && loadingText.text == "Click to start") {
+				actuallyStart(null);
+			}
 		}
 		
 		private function focusLost(e:Event = null):void
